@@ -8,6 +8,7 @@ import (
 
 	"github.com/kebairia/kvmcli/internal/config"
 	log "github.com/kebairia/kvmcli/internal/logger"
+
 	// "github.com/kebairia/kvmcli/internal/manifest"
 	"github.com/kebairia/kvmcli/internal/resources"
 )
@@ -16,7 +17,7 @@ func DeleteFromManifest(manifestPath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	operator, err := NewOperator(ctx)
+	operator, err := NewOperator(ctx, "")
 	if err != nil {
 		return fmt.Errorf("failed to create operator: %w", err)
 	}

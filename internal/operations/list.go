@@ -28,7 +28,7 @@ func ListAll() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	operator, err := NewOperator(ctx)
+	operator, err := NewOperator(ctx, "")
 	if err != nil {
 		return fmt.Errorf("failed to initialize operator: %w", err)
 	}
@@ -53,7 +53,7 @@ func ListAllNetworks() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	operator, err := NewOperator(ctx)
+	operator, err := NewOperator(ctx, "")
 	if err != nil {
 		return fmt.Errorf("failed to initialize operator: %w", err)
 	}
@@ -79,7 +79,7 @@ func ListAllStores() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	operator, err := NewOperator(ctx)
+	operator, err := NewOperator(ctx, "")
 	if err != nil {
 		return fmt.Errorf("failed to initialize operator: %w", err)
 	}

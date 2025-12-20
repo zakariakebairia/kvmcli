@@ -26,7 +26,7 @@ import (
 func CreateFromManifest(manifestPath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	operator, err := NewOperator(ctx)
+	operator, err := NewOperator(ctx, "")
 	if err != nil {
 		return fmt.Errorf("failed to create operator: %w", err)
 	}

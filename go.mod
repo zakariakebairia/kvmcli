@@ -6,9 +6,9 @@ require (
 	github.com/digitalocean/go-libvirt v0.0.0-20250226181018-4d5f24afb7c2
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/mattn/go-sqlite3 v1.14.27
+	github.com/pelletier/go-toml/v2 v2.2.4
 	github.com/spf13/cobra v1.9.1
 	github.com/zclconf/go-cty v1.16.3
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

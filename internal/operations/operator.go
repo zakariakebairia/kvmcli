@@ -7,6 +7,7 @@ import (
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/kebairia/kvmcli/internal"
+	"github.com/kebairia/kvmcli/internal/config"
 	db "github.com/kebairia/kvmcli/internal/database"
 	"github.com/kebairia/kvmcli/internal/resources"
 )
@@ -17,6 +18,7 @@ type Operator struct {
 	ctx  context.Context
 	db   *sql.DB
 	conn *libvirt.Libvirt
+	cfg  *config.GlobalConfig
 	// log  logger.Logger
 }
 
@@ -25,8 +27,13 @@ type Operator struct {
 // A nil ctx is promoted to context.Background().
 // If any step fails, resources created earlier are released before the error
 // is returned.
+// NewOperator initialises all shared dependencies.
+//
+// A nil ctx is promoted to context.Background().
+// If any step fails, resources created earlier are released before the error
+// is returned.
 // func NewOperator(ctx context.Context, log logger.Logger) (*Operator, error) {
-func NewOperator(ctx context.Context) (*Operator, error) {
+func NewOperator(ctx context.Context, configPath string) (*Operator, error) {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -34,13 +41,19 @@ func NewOperator(ctx context.Context) (*Operator, error) {
 	// 	log = logger.Log
 	// }
 
+	// Load global config
+	cfg, err := config.LoadGlobal(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("load global config: %w", err)
+	}
+
 	conn, err := internal.InitConnection()
 	if err != nil {
 		return nil, fmt.Errorf("init libvirt: %w", err)
 	}
 
 	// TODO:  sync.Once -> to ensure the database is initialized only once
-	database, err := db.InitDB(ctx)
+	database, err := db.InitDB(ctx, cfg.Paths.DB)
 	if err != nil {
 		_ = conn.Disconnect()
 		return nil, fmt.Errorf("init database: %w", err)
@@ -50,6 +63,7 @@ func NewOperator(ctx context.Context) (*Operator, error) {
 		ctx:  ctx,
 		db:   database,
 		conn: conn,
+		cfg:  cfg,
 		// log:  log,
 	}, nil
 }
