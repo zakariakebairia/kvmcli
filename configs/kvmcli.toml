@@ -1,0 +1,41 @@
+# /etc/kvmcli/kvmcli.toml
+# Global defaults for kvmcli (system-wide)
+# Precedence (lowest → highest):
+# built-in → /etc/kvmcli/kvmcli.toml → ~/.config/kvmcli/config.toml → ./kvmcli.toml
+
+[meta]
+version = 1
+
+[paths]
+db = "/home/zakaria/dox/homelab/kvmcli/zakaria.db"
+images_dir = "/var/lib/kvmcli/images"
+
+[vm]
+cpu = 2
+memory = "2GiB"
+disk = "20GiB"
+namespace = "default"
+
+[domain]
+machine = "q35"
+arch = "x86_64"
+type = "kvm"
+boot_device = "hd"
+
+[disk]
+bus = "virtio"
+format = "qcow2"
+target_prefix = "vd"
+
+[network]
+type = "network"
+model = "virtio"
+
+[graphics]
+type = "vnc"
+listen = "0.0.0.0"
+autoport = true
+
+[machine_aliases]
+q35 = "pc-q35-9.2"
+pc = "pc-i440fx-9.2"

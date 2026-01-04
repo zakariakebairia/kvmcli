@@ -12,12 +12,12 @@ import (
 type GlobalConfig struct {
 	Meta     MetaConfig     `toml:"meta"`
 	Paths    PathsConfig    `toml:"paths"`
-	VM       VMDefaults     `toml:"vm"`
-	Domain   DomainDefaults `toml:"domain"`
-	Disk     DiskDefaults   `toml:"disk"`
-	Net      NetDefaults    `toml:"net"`
+VM       VMConfig       `toml:"vm"`
+	Domain   DomainConfig   `toml:"domain"`
+	Disk     DiskConfig     `toml:"disk"`
+	Network  NetworkConfig  `toml:"network"`
 	Graphics GraphicsConfig `toml:"graphics"`
-	QEMU     QEMUConfig     `toml:"qemu"`
+	Aliases  MachineAliases `toml:"machine_aliases"`
 }
 
 type MetaConfig struct {
@@ -29,61 +29,38 @@ type PathsConfig struct {
 	ImagesDir string `toml:"images_dir"`
 }
 
-type VMDefaults struct {
-	Defaults VMDefaultSettings `toml:"defaults"`
+type VMConfig struct {
+	CPU       int    `toml:"cpu"`
+	Memory    string `toml:"memory"`
+	Disk      string `toml:"disk"`
+	Namespace string `toml:"namespace"`
 }
 
-type VMDefaultSettings struct {
-	CPU        int    `toml:"cpu"`
-	Memory     string `toml:"memory"`
-	Disk       string `toml:"disk"`
-	NamePrefix string `toml:"name_prefix"`
-	Namespace  string `toml:"namespace"`
-}
-
-type DomainDefaults struct {
-	Defaults DomainDefaultSettings `toml:"defaults"`
-}
-
-type DomainDefaultSettings struct {
+type DomainConfig struct {
 	Machine    string `toml:"machine"`
 	Arch       string `toml:"arch"`
-	DomainType string `toml:"domain_type"`
+	Type       string `toml:"type"`
 	BootDevice string `toml:"boot_device"`
 }
 
-type DiskDefaults struct {
-	Defaults DiskDefaultSettings `toml:"defaults"`
-}
-
-type DiskDefaultSettings struct {
+type DiskConfig struct {
 	Bus          string `toml:"bus"`
 	Format       string `toml:"format"`
 	TargetPrefix string `toml:"target_prefix"`
 }
 
-type NetDefaults struct {
-	Defaults NetDefaultSettings `toml:"defaults"`
-}
-
-type NetDefaultSettings struct {
+type NetworkConfig struct {
 	Type  string `toml:"type"`
 	Model string `toml:"model"`
 }
 
 type GraphicsConfig struct {
-	Defaults GraphicsDefaultSettings `toml:"defaults"`
-}
-
-type GraphicsDefaultSettings struct {
 	Type     string `toml:"type"`
 	Listen   string `toml:"listen"`
 	Autoport bool   `toml:"autoport"`
 }
 
-type QEMUConfig struct {
-	MachineAliases map[string]string `toml:"machine_aliases"`
-}
+type MachineAliases map[string]string
 
 // DefaultGlobalConfig returns a configuration with sensible defaults.
 func DefaultGlobalConfig() GlobalConfig {
@@ -94,47 +71,35 @@ func DefaultGlobalConfig() GlobalConfig {
 			DB:        filepath.Join(home, ".local", "share", "kvmcli", "kvmcli.db"),
 			ImagesDir: filepath.Join(home, ".local", "share", "kvmcli", "images"),
 		},
-		VM: VMDefaults{
-			Defaults: VMDefaultSettings{
-				CPU:       2,
-				Memory:    "2GiB",
-				Disk:      "20GiB",
-				Namespace: "default",
-			},
+		VM: VMConfig{
+			CPU:       2,
+			Memory:    "2GiB",
+			Disk:      "20GiB",
+			Namespace: "default",
 		},
-		Domain: DomainDefaults{
-			Defaults: DomainDefaultSettings{
-				Machine:    "q35",
-				Arch:       "x86_64",
-				DomainType: "kvm",
-				BootDevice: "hd",
-			},
+		Domain: DomainConfig{
+			Machine:    "q35",
+			Arch:       "x86_64",
+			Type:       "kvm",
+			BootDevice: "hd",
 		},
-		Disk: DiskDefaults{
-			Defaults: DiskDefaultSettings{
-				Bus:          "virtio",
-				Format:       "qcow2",
-				TargetPrefix: "vd",
-			},
+		Disk: DiskConfig{
+			Bus:          "virtio",
+			Format:       "qcow2",
+			TargetPrefix: "vd",
 		},
-		Net: NetDefaults{
-			Defaults: NetDefaultSettings{
-				Type:  "network",
-				Model: "virtio",
-			},
+		Network: NetworkConfig{
+			Type:  "network",
+			Model: "virtio",
 		},
 		Graphics: GraphicsConfig{
-			Defaults: GraphicsDefaultSettings{
-				Type:     "vnc",
-				Listen:   "0.0.0.0",
-				Autoport: true,
-			},
+			Type:     "vnc",
+			Listen:   "0.0.0.0",
+			Autoport: true,
 		},
-		QEMU: QEMUConfig{
-			MachineAliases: map[string]string{
-				"q35": "pc-q35-9.2",
-				"pc":  "pc-i440fx-9.2",
-			},
+		Aliases: MachineAliases{
+			"q35": "pc-q35-9.2",
+			"pc":  "pc-i440fx-9.2",
 		},
 	}
 }
