@@ -1,10 +1,13 @@
 tmp
 *.xml
 *.old
+*.db
+*.sqlite
 kvmcli
 *.yaml
 ./configs/yamls
-configs/admins.hcl
+!configs/admins.hcl
+!configs/store.hcl
 *.yml
 /README.org
 /TODO.org
