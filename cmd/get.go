@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	log "github.com/kebairia/kvmcli/internal/logger"
-	"github.com/kebairia/kvmcli/internal/operations"
+	log "github.com/zakariakebairia/kvmcli/internal/logger"
+	"github.com/zakariakebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
 )
 

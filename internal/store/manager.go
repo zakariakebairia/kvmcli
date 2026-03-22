@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	db "github.com/kebairia/kvmcli/internal/database"
+	db "github.com/zakariakebairia/kvmcli/internal/database"
 )
 
 // StoreManager defines the interface for managing image stores.

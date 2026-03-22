@@ -8,9 +8,9 @@ import (
 	"text/tabwriter"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/kebairia/kvmcli/internal/common"
-	db "github.com/kebairia/kvmcli/internal/database"
-	log "github.com/kebairia/kvmcli/internal/logger"
+	"github.com/zakariakebairia/kvmcli/internal/common"
+	db "github.com/zakariakebairia/kvmcli/internal/database"
+	log "github.com/zakariakebairia/kvmcli/internal/logger"
 )
 
 const allDomains = -1

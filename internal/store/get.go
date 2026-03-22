@@ -7,8 +7,8 @@ import (
 	"os"
 	"text/tabwriter"
 
-	"github.com/kebairia/kvmcli/internal/common"
-	db "github.com/kebairia/kvmcli/internal/database"
+	"github.com/zakariakebairia/kvmcli/internal/common"
+	db "github.com/zakariakebairia/kvmcli/internal/database"
 )
 
 // StoreInfo holds display information for a store.

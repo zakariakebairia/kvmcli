@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	log "github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/zakariakebairia/kvmcli/internal/logger"
 	"github.com/spf13/cobra"
 )
 

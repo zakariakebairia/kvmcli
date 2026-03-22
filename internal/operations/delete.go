@@ -6,11 +6,11 @@ import (
 	"slices"
 	"time"
 
-	"github.com/kebairia/kvmcli/internal/config"
-	log "github.com/kebairia/kvmcli/internal/logger"
+	"github.com/zakariakebairia/kvmcli/internal/config"
+	log "github.com/zakariakebairia/kvmcli/internal/logger"
 
-	// "github.com/kebairia/kvmcli/internal/manifest"
-	"github.com/kebairia/kvmcli/internal/resources"
+	// "github.com/zakariakebairia/kvmcli/internal/manifest"
+	"github.com/zakariakebairia/kvmcli/internal/resources"
 )
 
 func DeleteFromManifest(manifestPath string) error {

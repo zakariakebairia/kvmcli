@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	db "github.com/kebairia/kvmcli/internal/database"
+	db "github.com/zakariakebairia/kvmcli/internal/database"
 )
 
 // Delete removes the store from the database.

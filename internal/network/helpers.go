@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	db "github.com/kebairia/kvmcli/internal/database"
-	templates "github.com/kebairia/kvmcli/internal/templates"
+	db "github.com/zakariakebairia/kvmcli/internal/database"
+	templates "github.com/zakariakebairia/kvmcli/internal/templates"
 )
 
 // prepareNetwork generates the libvirt-compatible XML configuration

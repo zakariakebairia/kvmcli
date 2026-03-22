@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kebairia/kvmcli/internal/network"
-	"github.com/kebairia/kvmcli/internal/store"
-	"github.com/kebairia/kvmcli/internal/vms"
+	"github.com/zakariakebairia/kvmcli/internal/network"
+	"github.com/zakariakebairia/kvmcli/internal/store"
+	"github.com/zakariakebairia/kvmcli/internal/vms"
 )
 
 // -------------------------------------------

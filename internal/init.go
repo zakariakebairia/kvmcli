@@ -4,8 +4,8 @@ package internal
 // 	"fmt"
 // 	"os"
 //
-// 	"github.com/kebairia/kvmcli/internal"
-// 	"github.com/kebairia/kvmcli/internal/logger"
+// 	"github.com/zakariakebairia/kvmcli/internal"
+// 	"github.com/zakariakebairia/kvmcli/internal/logger"
 // 	"gopkg.in/yaml.v3"
 // )
 //

@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/network"
-	"github.com/kebairia/kvmcli/internal/templates"
+	"github.com/zakariakebairia/kvmcli/internal/database"
+	"github.com/zakariakebairia/kvmcli/internal/network"
+	"github.com/zakariakebairia/kvmcli/internal/templates"
 )
 
 const (

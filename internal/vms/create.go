@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/network"
+	"github.com/zakariakebairia/kvmcli/internal/database"
+	"github.com/zakariakebairia/kvmcli/internal/network"
 )
 
 // Create Virtual Machine

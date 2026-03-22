@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/kebairia/kvmcli/cmd"
+	"github.com/zakariakebairia/kvmcli/cmd"
 )
 
 // IDEA: kvmcli <verb> <resource> [names…] [flags]

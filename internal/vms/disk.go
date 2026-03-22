@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"time"
 
-	log "github.com/kebairia/kvmcli/internal/logger"
+	log "github.com/zakariakebairia/kvmcli/internal/logger"
 )
 
 type DiskManager interface {

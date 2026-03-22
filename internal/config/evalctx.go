@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
-	"github.com/kebairia/kvmcli/internal/database"
+	"github.com/zakariakebairia/kvmcli/internal/database"
 	"github.com/zclconf/go-cty/cty"
 )
 

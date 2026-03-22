@@ -9,7 +9,7 @@ import (
 	"github.com/digitalocean/go-libvirt"
 	"github.com/hashicorp/hcl/v2/gohcl"
 	"github.com/hashicorp/hcl/v2/hclparse"
-	"github.com/kebairia/kvmcli/internal/resources"
+	"github.com/zakariakebairia/kvmcli/internal/resources"
 )
 
 // Load parses and decodes the configuration file at the given path.

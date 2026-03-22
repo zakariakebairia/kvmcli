@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kebairia/kvmcli/internal/config"
-	// "github.com/kebairia/kvmcli/internal/manifest"
-	"github.com/kebairia/kvmcli/internal/resources"
+	"github.com/zakariakebairia/kvmcli/internal/config"
+	// "github.com/zakariakebairia/kvmcli/internal/manifest"
+	"github.com/zakariakebairia/kvmcli/internal/resources"
 )
 
 // TODO: Create a context with a timeout for the operations.

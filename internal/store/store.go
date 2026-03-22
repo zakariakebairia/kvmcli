@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	db "github.com/kebairia/kvmcli/internal/database"
+	db "github.com/zakariakebairia/kvmcli/internal/database"
 )
 
 // TODO: 1. Delete function for store

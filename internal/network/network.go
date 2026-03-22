@@ -3,7 +3,7 @@ package network
 import (
 	"context"
 	"errors"
-	// "github.com/kebairia/kvmcli/internal/config"
+	// "github.com/zakariakebairia/kvmcli/internal/config"
 )
 
 // IDEA: the ip <=>  mac address mapping done here in Virtual Network declaration

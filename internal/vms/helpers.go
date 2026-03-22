@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/kebairia/kvmcli/internal/database"
-	db "github.com/kebairia/kvmcli/internal/database"
-	log "github.com/kebairia/kvmcli/internal/logger"
+	"github.com/zakariakebairia/kvmcli/internal/database"
+	db "github.com/zakariakebairia/kvmcli/internal/database"
+	log "github.com/zakariakebairia/kvmcli/internal/logger"
 )
 
 const (

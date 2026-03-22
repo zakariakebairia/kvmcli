@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/kebairia/kvmcli/internal/network"
-	"github.com/kebairia/kvmcli/internal/resources"
-	"github.com/kebairia/kvmcli/internal/store"
-	"github.com/kebairia/kvmcli/internal/vms"
+	"github.com/zakariakebairia/kvmcli/internal/network"
+	"github.com/zakariakebairia/kvmcli/internal/resources"
+	"github.com/zakariakebairia/kvmcli/internal/store"
+	"github.com/zakariakebairia/kvmcli/internal/vms"
 )
 
 func BuildResources(

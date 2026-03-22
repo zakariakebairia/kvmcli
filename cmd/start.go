@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/kebairia/kvmcli/internal"
-	"github.com/kebairia/kvmcli/internal/vms"
+	"github.com/zakariakebairia/kvmcli/internal"
+	"github.com/zakariakebairia/kvmcli/internal/vms"
 	"github.com/spf13/cobra"
 )
 

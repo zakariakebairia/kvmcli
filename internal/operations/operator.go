@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/digitalocean/go-libvirt"
-	"github.com/kebairia/kvmcli/internal"
-	"github.com/kebairia/kvmcli/internal/config"
-	db "github.com/kebairia/kvmcli/internal/database"
-	"github.com/kebairia/kvmcli/internal/resources"
+	"github.com/zakariakebairia/kvmcli/internal"
+	"github.com/zakariakebairia/kvmcli/internal/config"
+	db "github.com/zakariakebairia/kvmcli/internal/database"
+	"github.com/zakariakebairia/kvmcli/internal/resources"
 )
 
 // Operator orchestrates lifecycle actions for any kvmcli Resource.
