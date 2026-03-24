@@ -1,17 +1,25 @@
+# Build artifacts
+kvmcli
 tmp
-*.xml
-*.old
+
+# Database
 *.db
 *.sqlite
-kvmcli
+
+# Config formats we don't track
+*.xml
 *.yaml
-./configs/yamls
-!configs/admins.hcl
-!configs/store.hcl
 *.yml
-!README.md
+*.hcl
+
+# Images
+*.svg
+
+# Docs we don't track
 *.md
-/README.org
-/TODO.org
-/kvmcli.db
+!README.md
+*.org
+
+# Specific files
+configs/test.hcl
 verify_datasource.hcl
