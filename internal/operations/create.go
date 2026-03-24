@@ -6,52 +6,39 @@ import (
 	"time"
 
 	"github.com/zakariakebairia/kvmcli/internal/config"
-	// "github.com/zakariakebairia/kvmcli/internal/manifest"
-	"github.com/zakariakebairia/kvmcli/internal/resources"
+	"github.com/zakariakebairia/kvmcli/internal/database"
+	"github.com/zakariakebairia/kvmcli/internal/engine"
+	"github.com/zakariakebairia/kvmcli/internal/registry"
+
+	// Blank imports so provider init() functions register resource types
+	_ "github.com/zakariakebairia/kvmcli/internal/providers/network"
+	_ "github.com/zakariakebairia/kvmcli/internal/providers/store"
 )
-
-// TODO: Create a context with a timeout for the operations.
-//		   This function is responsible for creating resources defined in a manifest file.
-//		   1. Create a new operator
-//	     2. Load the manifest file, and extract the resources.
-//	     3. Loop through the resources and create them one by one.
-//			 !. the operator has a connection to the libvirt daemon.
-//			 !. Create/Delete/Update the resources as needed.
-
-// IDEA: use go routines to create the resources in parallel.
-
-// NOTICE: using go routines has an issue, because sometimes I need to create network resources
-//       before creating the VMs.
 
 func CreateFromManifest(manifestPath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	operator, err := NewOperator(ctx, "")
+
+	session, cleanup, err := NewSession(ctx, "")
 	if err != nil {
-		return fmt.Errorf("failed to create operator: %w", err)
+		return fmt.Errorf("failed to create context: %w", err)
 	}
-	defer operator.Close()
+	defer cleanup()
 
-	// resources, err := manifest.Load(manifestPath, operator.ctx, operator.db, operator.conn)
-	resources, err := config.Load(manifestPath, operator.ctx, operator.db, operator.conn)
+	cfg, err := config.LoadConfig(manifestPath)
 	if err != nil {
-		return fmt.Errorf("failed to load manifest %q: %w", manifestPath, err)
+		return fmt.Errorf("failed to load config %q: %w", manifestPath, err)
 	}
 
-	for _, resource := range resources {
-		if err := operator.Create(resource); err != nil {
-			return err
-		}
+	dbHandler := database.NewDBHandler(session.DB)
+	if err := dbHandler.EnsureTable(ctx); err != nil {
+		return fmt.Errorf("ensure state table: %w", err)
 	}
 
-	return nil
-}
+	eng := engine.New(session, dbHandler)
 
-// Create provisions the given Resource.
-func (o *Operator) Create(r resources.Resource) error {
-	return r.Create()
+	var desired []registry.Object
+	desired = append(desired, config.BuildNetworkObjects(cfg)...)
+	desired = append(desired, config.BuildStoreObjects(cfg)...)
+	return eng.Apply(desired)
 }
-
-// func (o *Operator) Start(r resources.Resource) error {
-// 	return r.Start()
-// }
