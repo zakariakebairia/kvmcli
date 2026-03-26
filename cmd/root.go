@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	log "github.com/zakariakebairia/kvmcli/internal/logger"
 	"github.com/spf13/cobra"
+	log "github.com/zakariakebairia/kvmcli/internal/logger"
 )
 
 // Global flag variables.
@@ -36,5 +36,6 @@ func init() {
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(stopCmd)
 	rootCmd.AddCommand(GetCmd)
+	rootCmd.AddCommand(ShowVersion)
 	rootCmd.AddCommand(InitVMCmd)
 }
