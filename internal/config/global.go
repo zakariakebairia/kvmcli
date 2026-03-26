@@ -10,14 +10,14 @@ import (
 
 // GlobalConfig represents the system-wide configuration loaded from TOML.
 type GlobalConfig struct {
-	Meta     MetaConfig     `toml:"meta"`
-	Paths    PathsConfig    `toml:"paths"`
-VM       VMConfig       `toml:"vm"`
-	Domain   DomainConfig   `toml:"domain"`
-	Disk     DiskConfig     `toml:"disk"`
-	Network  NetworkConfig  `toml:"network"`
-	Graphics GraphicsConfig `toml:"graphics"`
-	Aliases  MachineAliases `toml:"machine_aliases"`
+	Meta     MetaConfig          `toml:"meta"`
+	Paths    PathsConfig         `toml:"paths"`
+	VM       GlobalVMConfig      `toml:"vm"`
+	Domain   DomainConfig        `toml:"domain"`
+	Disk     DiskConfig          `toml:"disk"`
+	Network  GlobalNetworkConfig `toml:"network"`
+	Graphics GraphicsConfig      `toml:"graphics"`
+	Aliases  MachineAliases      `toml:"machine_aliases"`
 }
 
 type MetaConfig struct {
@@ -29,7 +29,7 @@ type PathsConfig struct {
 	ImagesDir string `toml:"images_dir"`
 }
 
-type VMConfig struct {
+type GlobalVMConfig struct {
 	CPU       int    `toml:"cpu"`
 	Memory    string `toml:"memory"`
 	Disk      string `toml:"disk"`
@@ -49,7 +49,7 @@ type DiskConfig struct {
 	TargetPrefix string `toml:"target_prefix"`
 }
 
-type NetworkConfig struct {
+type GlobalNetworkConfig struct {
 	Type  string `toml:"type"`
 	Model string `toml:"model"`
 }
@@ -71,7 +71,7 @@ func DefaultGlobalConfig() GlobalConfig {
 			DB:        filepath.Join(home, ".local", "share", "kvmcli", "kvmcli.db"),
 			ImagesDir: filepath.Join(home, ".local", "share", "kvmcli", "images"),
 		},
-		VM: VMConfig{
+		VM: GlobalVMConfig{
 			CPU:       2,
 			Memory:    "2GiB",
 			Disk:      "20GiB",
@@ -88,7 +88,7 @@ func DefaultGlobalConfig() GlobalConfig {
 			Format:       "qcow2",
 			TargetPrefix: "vd",
 		},
-		Network: NetworkConfig{
+		Network: GlobalNetworkConfig{
 			Type:  "network",
 			Model: "virtio",
 		},

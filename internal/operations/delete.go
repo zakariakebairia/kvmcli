@@ -8,7 +8,6 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/config"
 	"github.com/zakariakebairia/kvmcli/internal/database"
 	"github.com/zakariakebairia/kvmcli/internal/engine"
-	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
 func DeleteFromManifest(manifestPath string) error {
@@ -21,16 +20,16 @@ func DeleteFromManifest(manifestPath string) error {
 	}
 	defer cleanup()
 
-	cfg, err := config.LoadConfig(manifestPath)
-	if err != nil {
-		return fmt.Errorf("failed to load config %q: %w", manifestPath, err)
+	dbHandler := database.NewDBHandler(session.DB)
+	if err := dbHandler.EnsureTable(ctx); err != nil {
+		return fmt.Errorf("ensure state table: %w", err)
 	}
 
-	dbHandler := database.NewDBHandler(session.DB)
-	eng := engine.New(session, dbHandler)
+	objects, err := config.Load(manifestPath, session.Ctx, dbHandler)
+	if err != nil {
+		return fmt.Errorf("load config %q: %w", manifestPath, err)
+	}
 
-	var targets []registry.Object
-	targets = append(targets, config.BuildNetworkObjects(cfg)...)
-	targets = append(targets, config.BuildStoreObjects(cfg)...)
-	return eng.Destroy(targets)
+	eng := engine.New(session, dbHandler)
+	return eng.Destroy(objects)
 }

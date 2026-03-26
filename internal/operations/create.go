@@ -8,11 +8,11 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/config"
 	"github.com/zakariakebairia/kvmcli/internal/database"
 	"github.com/zakariakebairia/kvmcli/internal/engine"
-	"github.com/zakariakebairia/kvmcli/internal/registry"
 
 	// Blank imports so provider init() functions register resource types
 	_ "github.com/zakariakebairia/kvmcli/internal/providers/network"
 	_ "github.com/zakariakebairia/kvmcli/internal/providers/store"
+	_ "github.com/zakariakebairia/kvmcli/internal/providers/vm"
 )
 
 func CreateFromManifest(manifestPath string) error {
@@ -25,20 +25,16 @@ func CreateFromManifest(manifestPath string) error {
 	}
 	defer cleanup()
 
-	cfg, err := config.LoadConfig(manifestPath)
-	if err != nil {
-		return fmt.Errorf("failed to load config %q: %w", manifestPath, err)
-	}
-
 	dbHandler := database.NewDBHandler(session.DB)
 	if err := dbHandler.EnsureTable(ctx); err != nil {
 		return fmt.Errorf("ensure state table: %w", err)
 	}
 
-	eng := engine.New(session, dbHandler)
+	objects, err := config.Load(manifestPath, session.Ctx, dbHandler)
+	if err != nil {
+		return fmt.Errorf("load config %q: %w", manifestPath, err)
+	}
 
-	var desired []registry.Object
-	desired = append(desired, config.BuildNetworkObjects(cfg)...)
-	desired = append(desired, config.BuildStoreObjects(cfg)...)
-	return eng.Apply(desired)
+	eng := engine.New(session, dbHandler)
+	return eng.Apply(objects)
 }
