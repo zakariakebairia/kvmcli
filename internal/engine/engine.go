@@ -12,18 +12,18 @@ import (
 // and persists state via the DBHandler.
 type Engine struct {
 	dbHandler *database.DBHandler
-	ctx       registry.Session
+	session   registry.Session
 }
 
-func New(ctx registry.Session, dbHandler *database.DBHandler) *Engine {
-	return &Engine{dbHandler: dbHandler, ctx: ctx}
+func New(session registry.Session, dbHandler *database.DBHandler) *Engine {
+	return &Engine{dbHandler: dbHandler, session: session}
 }
 
 // Apply creates each desired resource and persists its state.
 // Later this will diff desired vs current and handle dependency ordering.
 func (e *Engine) Apply(desired []registry.Object) error {
 	for _, obj := range desired {
-		rt, ok := registry.Get(obj.TypeName)
+		resourceType, ok := registry.Get(obj.TypeName)
 		if !ok {
 			return fmt.Errorf("unknown resource type: %s", obj.TypeName)
 		}
@@ -34,12 +34,12 @@ func (e *Engine) Apply(desired []registry.Object) error {
 			Current: nil,
 		}
 
-		if err := rt.Lifecycle.Apply(e.ctx, change); err != nil {
+		if err := resourceType.Lifecycle.Apply(e.session, change); err != nil {
 			return fmt.Errorf("apply %s/%s: %w", obj.TypeName, obj.Name, err)
 		}
 
 		obj.Status = "created"
-		if err := e.dbHandler.Put(e.ctx.Ctx, &obj); err != nil {
+		if err := e.dbHandler.Put(e.session.Ctx, &obj); err != nil {
 			return fmt.Errorf("save state %s/%s: %w", obj.TypeName, obj.Name, err)
 		}
 	}
@@ -56,12 +56,17 @@ func (e *Engine) Destroy(targets []registry.Object) error {
 			continue
 		}
 
-		if err := rt.Lifecycle.Destroy(e.ctx, obj); err != nil {
+		if err := rt.Lifecycle.Destroy(e.session, obj); err != nil {
 			fmt.Printf("warning: failed to destroy %s/%s: %v\n", obj.TypeName, obj.Name, err)
 			continue
 		}
 
-		if err := e.dbHandler.Remove(e.ctx.Ctx, obj.TypeName, obj.Name, obj.Namespace); err != nil {
+		if err := e.dbHandler.Remove(
+			e.session.Ctx,
+			obj.TypeName,
+			obj.Name,
+			obj.Namespace,
+		); err != nil {
 			fmt.Printf("warning: failed to remove state %s/%s: %v\n", obj.TypeName, obj.Name, err)
 			continue
 		}

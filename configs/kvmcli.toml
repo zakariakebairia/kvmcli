@@ -7,7 +7,7 @@
 version = 1
 
 [paths]
-db = "/home/zakaria/dox/homelab/kvmcli/zakaria.db"
+db = "/home/zakaria/dox/homelab/kvmcli/test.db"
 images_dir = "/var/lib/kvmcli/images"
 
 [vm]

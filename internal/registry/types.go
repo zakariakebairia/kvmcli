@@ -23,8 +23,7 @@ const (
 	ActionDelete
 )
 
-// State is the unified struct for any resource (vm, network, store ...etc)
-// IDEA: I will change its name  to Object or something similar
+// Object is the unified struct for any resource (vm, network, store ...etc)
 
 // type Object stcut {}
 type Object struct {

@@ -69,8 +69,41 @@ func (s *DBHandler) Get(
 
 // List retrieves all resources of a given type (or all types if typeName is "").
 func (s *DBHandler) List(ctx context.Context, typeName string) ([]registry.Object, error) {
-	// ...
-	return nil, nil
+	var query string
+	var args []any
+
+	if typeName != "" {
+		query = `SELECT type, name, namespace, labels, attrs, status FROM resources WHERE type = ?`
+		args = append(args, typeName)
+	} else {
+		query = `SELECT type, name, namespace, labels, attrs, status FROM resources`
+	}
+
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("list resources: %w", err)
+	}
+	defer rows.Close()
+
+	var results []registry.Object
+	for rows.Next() {
+		var labelsRaw, attrsRaw string
+		var obj registry.Object
+		if err := rows.Scan(
+			&obj.TypeName,
+			&obj.Name,
+			&obj.Namespace,
+			&labelsRaw,
+			&attrsRaw,
+			&obj.Status,
+		); err != nil {
+			return nil, fmt.Errorf("scan resource: %w", err)
+		}
+		json.Unmarshal([]byte(labelsRaw), &obj.Labels)
+		json.Unmarshal([]byte(attrsRaw), &obj.Attrs)
+		results = append(results, obj)
+	}
+	return results, rows.Err()
 }
 
 // Put inserts or updates a resource state.

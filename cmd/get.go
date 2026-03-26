@@ -3,9 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	log "github.com/zakariakebairia/kvmcli/internal/logger"
-	"github.com/zakariakebairia/kvmcli/internal/operations"
 	"github.com/spf13/cobra"
+	log "github.com/zakariakebairia/kvmcli/internal/logger"
 )
 
 // Create the "get" parent command.
@@ -25,7 +24,8 @@ var GetVMCmd = &cobra.Command{
 			// operations.ListAll()
 			return
 		}
-		operations.ListAll()
+		// operations.ListAll()
+		fmt.Println("I'm working on it")
 	},
 }
 
@@ -54,7 +54,8 @@ var GetNetworkCmd = &cobra.Command{
 			fmt.Println("List by namespace here for networks")
 			return
 		}
-		operations.ListAllNetworks()
+		// operations.ListAllNetworks()
+		fmt.Println("I'm working on it")
 	},
 }
 
@@ -69,7 +70,8 @@ var GetStoreCmd = &cobra.Command{
 			fmt.Println("List by namespace here for stores")
 			return
 		}
-		operations.ListAllStores()
+		// operations.ListAllStores()
+		fmt.Println("I'm working on it")
 	},
 }
 
