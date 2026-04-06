@@ -3,9 +3,10 @@ package vm
 import (
 	"encoding/xml"
 	"fmt"
+	"net"
 	"path/filepath"
 
-	"github.com/zakariakebairia/kvmcli/internal/network"
+	"github.com/zakariakebairia/kvmcli/internal/providers/network"
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 	"github.com/zakariakebairia/kvmcli/internal/templates"
 )
@@ -40,6 +41,10 @@ func (l *VMLifecycle) Plan(desired, current *registry.Object) (registry.Action, 
 	if current != nil && desired == nil {
 		return registry.ActionDelete, nil
 	}
+
+	if current != nil && desired != nil {
+		return registry.ActionUpdate, nil
+	}
 	return registry.ActionNone, nil
 }
 
@@ -53,7 +58,10 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	}
 
 	// Step 2: Look up image info from the store's state
-	artifactsPath, imagesPath, imageFile, osProfile, err := lookupImage(session, attrStr(*spec, "image"))
+	artifactsPath, imagesPath, imageFile, osProfile, err := lookupImage(
+		session,
+		attrStr(*spec, "image"),
+	)
 	if err != nil {
 		return fmt.Errorf("lookup image: %w", err)
 	}
@@ -83,8 +91,17 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 
 	// Step 5: Set static IP mapping on the network
 	if ip := attrStr(*spec, "ip"); ip != "" {
-		networkManager := network.NewLibvirtNetworkManager(session.Conn, session.DB)
-		if err := networkManager.SetStaticMapping(session.Ctx, netName, ip, macAddress); err != nil {
+		parsedIP := net.ParseIP(ip)
+		parsedMAC, err := net.ParseMAC(macAddress)
+		if err != nil {
+			return fmt.Errorf("invalid MAC %q: %w", macAddress, err)
+		}
+		networkManager := network.NewNetworkManager(session.Conn, session.DB)
+		if err := networkManager.SetStaticMapping(
+			netName,
+			parsedIP,
+			parsedMAC,
+		); err != nil {
 			session.Conn.DomainUndefineFlags(dom, 0)
 			disk.DeleteOverlay(session.Ctx, dest)
 			return fmt.Errorf("set static mapping: %w", err)
@@ -133,7 +150,10 @@ func (l *VMLifecycle) Destroy(session registry.Session, current registry.Object)
 }
 
 // buildDomainXML generates the libvirt XML for a VM domain.
-func buildDomainXML(spec *registry.Object, diskPath, netName, macAddress, osProfile string) (string, error) {
+func buildDomainXML(
+	spec *registry.Object,
+	diskPath, netName, macAddress, osProfile string,
+) (string, error) {
 	cpu := attrInt(*spec, "cpu")
 	memory := attrInt(*spec, "memory")
 

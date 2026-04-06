@@ -31,7 +31,10 @@ func attrInt(s registry.Object, key string) int {
 
 // lookupImage finds an image by name across all stores in the DB.
 // Returns the artifacts path, images path, and image file name.
-func lookupImage(session registry.Session, imageName string) (artifactsPath, imagesPath, imageFile, osProfile string, err error) {
+func lookupImage(
+	session registry.Session,
+	imageName string,
+) (artifactsPath, imagesPath, imageFile, osProfile string, err error) {
 	dbHandler := database.NewDBHandler(session.DB)
 
 	stores, err := dbHandler.List(session.Ctx, "store")
