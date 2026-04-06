@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/zakariakebairia/kvmcli/internal"
-	"github.com/zakariakebairia/kvmcli/internal/vms"
+	"github.com/zakariakebairia/kvmcli/internal/providers/vm"
 	"github.com/spf13/cobra"
 )
 
@@ -25,13 +24,11 @@ var stopVmCmd = &cobra.Command{
 		if err != nil {
 			fmt.Println("init libvirt: %w", err)
 		}
-		// TODO: Add your VM stopping logic here
-		ctx := context.Background()
-		dom := vms.NewLibvirtDomainManager(conn)
-		dom.Stop(ctx, vmName)
+		if err := vm.Stop(conn, vmName); err != nil {
+			fmt.Println(err)
+			return
+		}
 		fmt.Printf("vm/%s stopped\n", vmName)
-		// Create a new vm object
-		// then start this object using the name of this vm
 	},
 }
 

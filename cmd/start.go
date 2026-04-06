@@ -1,11 +1,10 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/zakariakebairia/kvmcli/internal"
-	"github.com/zakariakebairia/kvmcli/internal/vms"
+	"github.com/zakariakebairia/kvmcli/internal/providers/vm"
 	"github.com/spf13/cobra"
 )
 
@@ -26,9 +25,10 @@ var startVmCmd = &cobra.Command{
 			fmt.Println("init libvirt: %w", err)
 		}
 		// TODO: Add your VM starting logic here
-		ctx := context.Background()
-		dom := vms.NewLibvirtDomainManager(conn)
-		dom.Start(ctx, vmName)
+		if err := vm.Start(conn, vmName); err != nil {
+			fmt.Println(err)
+			return
+		}
 		fmt.Printf("vm/%s started\n", vmName)
 	},
 }
