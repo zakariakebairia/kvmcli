@@ -14,7 +14,11 @@ import (
 // and fills in each VM's NetName and Store fields.
 func resolve(cfg *hclConfig, ctx context.Context, dbHandler *database.DBHandler) error {
 	// Collect names defined in this file and check for duplicates
-	networks, err := collectNames("network", cfg.Networks, func(n networkDef) string { return n.Name })
+	networks, err := collectNames(
+		"network",
+		cfg.Networks,
+		func(n networkDef) string { return n.Name },
+	)
 	if err != nil {
 		return err
 	}
@@ -35,10 +39,22 @@ func resolve(cfg *hclConfig, ctx context.Context, dbHandler *database.DBHandler)
 	for index := range cfg.VMs {
 		vm := &cfg.VMs[index]
 
-		if err := resolveExpr(vm.NetExpr, evalCtx, &vm.NetName, "vm %q: network", vm.Name); err != nil {
+		if err := resolveExpr(
+			vm.NetExpr,
+			evalCtx,
+			&vm.NetName,
+			"vm %q: network",
+			vm.Name,
+		); err != nil {
 			return err
 		}
-		if err := resolveExpr(vm.StoreExpr, evalCtx, &vm.Store, "vm %q: store", vm.Name); err != nil {
+		if err := resolveExpr(
+			vm.StoreExpr,
+			evalCtx,
+			&vm.Store,
+			"vm %q: store",
+			vm.Name,
+		); err != nil {
 			return err
 		}
 	}
@@ -48,7 +64,11 @@ func resolve(cfg *hclConfig, ctx context.Context, dbHandler *database.DBHandler)
 
 // collectNames extracts names from a slice, validates they're non-empty
 // and unique, and returns them as a set.
-func collectNames[T any](kind string, items []T, getName func(T) string) (map[string]struct{}, error) {
+func collectNames[T any](
+	kind string,
+	items []T,
+	getName func(T) string,
+) (map[string]struct{}, error) {
 	names := make(map[string]struct{}, len(items))
 	for _, item := range items {
 		name := getName(item)
@@ -65,13 +85,21 @@ func collectNames[T any](kind string, items []T, getName func(T) string) (map[st
 
 // resolveExpr evaluates an HCL expression to a string and stores
 // the result in target.
-func resolveExpr(expr hcl.Expression, evalCtx *hcl.EvalContext, target *string, errFmt string, errArgs ...any) error {
+func resolveExpr(
+	expr hcl.Expression,
+	evalCtx *hcl.EvalContext,
+	target *string,
+	errFmt string,
+	errArgs ...any,
+) error {
 	val, diags := expr.Value(evalCtx)
 	if diags.HasErrors() {
 		return fmt.Errorf(errFmt+": %w", append(errArgs, diags)...)
 	}
 	if val.Type() != cty.String {
-		return fmt.Errorf(errFmt+": expected string, got %s", append(errArgs, val.Type().FriendlyName())...)
+		return fmt.Errorf(
+			errFmt+": expected string, got %s",
+			append(errArgs, val.Type().FriendlyName())...)
 	}
 	*target = val.AsString()
 	return nil

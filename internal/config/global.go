@@ -1,9 +1,11 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/pelletier/go-toml/v2"
 )
@@ -104,54 +106,58 @@ func DefaultGlobalConfig() GlobalConfig {
 	}
 }
 
-// LoadGlobal looks for kvmcli.toml in standard locations and merges them.
-// Precedence: explicit path > ./kvmcli.toml > ~/.config/kvmcli/config.toml > /etc/kvmcli/kvmcli.toml > defaults
-func LoadGlobal(explicitPath string) (*GlobalConfig, error) {
-	cfg := DefaultGlobalConfig()
-
-	paths := []string{}
-
-	// 1. /etc/kvmcli/kvmcli.toml
-	paths = append(paths, "/etc/kvmcli/kvmcli.toml")
-
-	// 2. ~/.config/kvmcli/config.toml
-	if home, err := os.UserHomeDir(); err == nil {
-		paths = append(paths, filepath.Join(home, ".config", "kvmcli", "config.toml"))
-		// Also try ~/.config/kvmcli/kvmcli.toml as usually expected
-		paths = append(paths, filepath.Join(home, ".config", "kvmcli", "kvmcli.toml"))
+// LoadDefaultConfig loads the global configuration by searching a set of
+// well-known paths in descending priority order:
+//
+//  1. explicitPath (if provided via --config flag)
+//  2. $PWD/kvmcli.toml (project-local)
+//  3. ~/.config/kvmcli/kvmcli.toml (user-level)
+//  4. /etc/kvmcli/kvmcli.toml (system-wide)
+//
+// The first file found wins. If no config file is found, an error is returned.
+func LoadDefaultConfig() (*GlobalConfig, error) {
+	// User home directory
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("could not determine home directory: %w", err)
+	}
+	// Current directory
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, fmt.Errorf("could not determine current directory: %w", err)
+	}
+	// respect $XDG_CONFIG_HOME
+	xdgConfig := os.Getenv("XDG_CONFIG_HOME")
+	if xdgConfig == "" {
+		xdgConfig = filepath.Join(home, ".config")
 	}
 
-	// 3. ./kvmcli.toml
-	if cwd, err := os.Getwd(); err == nil {
-		paths = append(paths, filepath.Join(cwd, "kvmcli.toml"))
-		// Also try ./configs/kvmcli.toml for local dev convenience
-		paths = append(paths, filepath.Join(cwd, "configs", "kvmcli.toml"))
+	paths := []string{
+		// explicitPath,
+		filepath.Join(cwd, "kvmcli.toml"),
+		filepath.Join(cwd, "configs", "kvmcli.toml"),
+		filepath.Join(home, xdgConfig, "kvmcli", "kvmcli.toml"),
+		"/etc/kvmcli/kvmcli.toml",
 	}
 
-	// 4. Explicit path (highest priority)
-	if explicitPath != "" {
-		paths = append(paths, explicitPath)
-	}
-
-	loadedAny := false
 	for _, p := range paths {
-		if _, err := os.Stat(p); err == nil {
-			content, err := os.ReadFile(p)
-			if err != nil {
-				return nil, fmt.Errorf("read config %s: %w", p, err)
-			}
-
-			// Unmarshal into the existing struct to overwrite defaults
-			if err := toml.Unmarshal(content, &cfg); err != nil {
-				return nil, fmt.Errorf("parse config %s: %w", p, err)
-			}
-			loadedAny = true
+		if p == "" {
+			continue
 		}
+		content, err := os.ReadFile(p)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err != nil {
+			return nil, fmt.Errorf("read config %q: %w", p, err)
+		}
+
+		var cfg GlobalConfig
+		if err := toml.Unmarshal(content, &cfg); err != nil {
+			return nil, fmt.Errorf("parse config %q: %w", p, err)
+		}
+		return &cfg, nil
 	}
 
-	if !loadedAny && explicitPath != "" {
-		return nil, fmt.Errorf("explicit config path %q not found", explicitPath)
-	}
-
-	return &cfg, nil
+	return nil, fmt.Errorf("no config file found, searched: %s", strings.Join(paths[1:], ", "))
 }

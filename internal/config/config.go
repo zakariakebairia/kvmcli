@@ -12,51 +12,15 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
-// Load parses an HCL file, resolves all expressions, and returns
-// the resulting Objects ready for the engine.
-func Load(path string, ctx context.Context, dbHandler *database.DBHandler) ([]registry.Object, error) {
-	cfg, err := parse(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := resolve(cfg, ctx, dbHandler); err != nil {
-		return nil, err
-	}
-
-	return buildObjects(cfg), nil
-}
-
-// --- HCL parsing ---------------------------------------------------------
-
-func parse(path string) (*hclConfig, error) {
-	src, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read config %q: %w", path, err)
-	}
-
-	parser := hclparse.NewParser()
-	file, diags := parser.ParseHCL(src, path)
-	if diags.HasErrors() {
-		return nil, fmt.Errorf("parse hcl %q: %w", path, diags)
-	}
-
-	var cfg hclConfig
-	if diags := gohcl.DecodeBody(file.Body, nil, &cfg); diags.HasErrors() {
-		return nil, fmt.Errorf("decode hcl %q: %w", path, diags)
-	}
-	return &cfg, nil
-}
-
 // --- HCL config types ----------------------------------------------------
 
 // hclConfig represents a complete kvmcli HCL file.
 type hclConfig struct {
-	Locals   *hclLocals    `hcl:"locals,block"`
-	Networks []networkDef  `hcl:"network,block"`
-	VMs      []vmDef       `hcl:"vm,block"`
-	Stores   []storeDef    `hcl:"store,block"`
-	Data     []dataRef     `hcl:"data,block"`
+	Locals   *hclLocals   `hcl:"locals,block"`
+	Networks []networkDef `hcl:"network,block"`
+	VMs      []vmDef      `hcl:"vm,block"`
+	Stores   []storeDef   `hcl:"store,block"`
+	Data     []dataRef    `hcl:"data,block"`
 }
 
 type hclLocals struct {
@@ -72,15 +36,15 @@ type dataRef struct {
 
 // vmDef describes a virtual machine block in HCL.
 type vmDef struct {
-	Name      string            `hcl:"name,label"`
-	Namespace string            `hcl:"namespace"`
-	Image     string            `hcl:"image"`
-	CPU       int               `hcl:"cpu"`
-	Memory    int               `hcl:"memory"`
-	Disk      string            `hcl:"disk,optional"`
-	NetExpr   hcl.Expression    `hcl:"network,attr"`
+	Name      string         `hcl:"name,label"`
+	Namespace string         `hcl:"namespace"`
+	Image     string         `hcl:"image"`
+	CPU       int            `hcl:"cpu"`
+	Memory    int            `hcl:"memory"`
+	Disk      string         `hcl:"disk,optional"`
+	NetExpr   hcl.Expression `hcl:"network,attr"`
 	NetName   string
-	StoreExpr hcl.Expression    `hcl:"store,attr"`
+	StoreExpr hcl.Expression `hcl:"store,attr"`
 	Store     string
 	MAC       string            `hcl:"mac,optional"`
 	IP        string            `hcl:"ip,optional"`
@@ -129,4 +93,44 @@ type imageDef struct {
 	File      string `hcl:"file,optional"`
 	Size      string `hcl:"size,optional"`
 	Checksum  string `hcl:"checksum,optional"`
+}
+
+// Load parses an HCL file, resolves all expressions, and returns
+// the resulting Objects ready for the engine.
+func Load(
+	path string,
+	ctx context.Context,
+	dbHandler *database.DBHandler,
+) ([]registry.Object, error) {
+	cfg, err := parse(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := resolve(cfg, ctx, dbHandler); err != nil {
+		return nil, err
+	}
+
+	return buildObjects(cfg), nil
+}
+
+// --- HCL parsing ---------------------------------------------------------
+
+func parse(path string) (*hclConfig, error) {
+	src, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("read config %q: %w", path, err)
+	}
+
+	parser := hclparse.NewParser()
+	file, diags := parser.ParseHCL(src, path)
+	if diags.HasErrors() {
+		return nil, fmt.Errorf("parse hcl %q: %w", path, diags)
+	}
+
+	var cfg hclConfig
+	if diags := gohcl.DecodeBody(file.Body, nil, &cfg); diags.HasErrors() {
+		return nil, fmt.Errorf("decode hcl %q: %w", path, diags)
+	}
+	return &cfg, nil
 }
