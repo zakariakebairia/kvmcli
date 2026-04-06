@@ -13,16 +13,15 @@ import (
 // NewSession initialises the shared dependencies (libvirt, DB) and returns
 // a registry.Session ready for use, plus a closer function to release them.
 // func NewSession(ctx context.Context, configPath string) (registry.Session, func(), error) {
-func NewSession(ctx context.Context, configPath string) (registry.Session, func(), error) {
+func NewSession(ctx context.Context) (registry.Session, func(), error) {
 	// Check global context
 	if ctx == nil {
 		ctx = context.Background()
 	}
 
 	// Load global config to get the DB path
-	// FIX: Here, the config loading doesn't do anything useful
 	// I need to fix that, either remove it from here, or add it to the session
-	cfg, err := config.LoadGlobal(configPath)
+	cfg, err := config.LoadDefaultConfig()
 	if err != nil {
 		return registry.Session{}, nil, fmt.Errorf("load global config: %w", err)
 	}

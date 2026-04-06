@@ -19,7 +19,7 @@ func CreateFromManifest(manifestPath string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	session, cleanup, err := NewSession(ctx, "")
+	session, cleanup, err := NewSession(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to create context: %w", err)
 	}
