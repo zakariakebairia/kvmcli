@@ -1,49 +1,39 @@
-# Makefile for kvmcli project
+BINARY_NAME      = kvmcli
+GO               = /usr/local/go/bin/go
+QEMU_IMG_BINARY  = $(shell which qemu-img)
 
-# BINARY_NAME sets the name of the output executable.
-BINARY_NAME = kvmcli
-BINARY_PATH = /usr/local/go/bin/go
 VERSION ?= $(shell git describe --tags --always --dirty)
 COMMIT  ?= $(shell git rev-parse --short HEAD)
 BUILT   ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
-PKG     := github.com/zakariakebairia/kvmcli/cmd
-LDFLAGS := -X $(PKG).Version=$(VERSION) -X $(PKG).Commit=$(COMMIT) -X $(PKG).Built=$(BUILT)
 
+PROJECT     := github.com/zakariakebairia/kvmcli
+LDFLAGS := -X $(PROJECT)/cmd.Version=$(VERSION) \
+           -X $(PROJECT)/cmd.Commit=$(COMMIT) \
+           -X $(PROJECT)/cmd.Built=$(BUILT) \
+           -X $(PROJECT)/vm.QemuImgBinary=$(QEMU_IMG_BINARY)
 
-# The default target: when you run "make" without arguments, it will run the "build" target.
 all: build
 
-# build: Compiles the Go project into a binary executable.
 build:
 	@echo "Building $(BINARY_NAME)..."
-	CGO_CFLAGS="-Wno-discarded-qualifiers" $(BINARY_PATH) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) .
+	CGO_CFLAGS="-Wno-discarded-qualifiers" $(GO) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) .
 
-publish:
-	@echo "Building $(BINARY_NAME)..."
-	CGO_CFLAGS="-Wno-discarded-qualifiers" $(BINARY_PATH) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) .
+publish: build
 	cp $(BINARY_NAME) ~/.local/bin/
 
-# run: Builds the project (if necessary) and runs the executable.
 run: build
-	@echo "Running $(BINARY_NAME)..."
 	./$(BINARY_NAME)
 
-# fmt: Formats the source code using the built-in Go formatter.
 fmt:
-	@echo "Formatting code..."
-	go fmt ./...
+	$(GO) fmt ./...
 
-# vet: Runs static analysis to catch potential issues.
 vet:
-	@echo "Checking code with go vet..."
-	go vet ./...
+	$(GO) vet ./...
 
-# test: Executes the unit tests in the project.
 test:
-	@echo "Running tests..."
-	go test ./...
+	$(GO) test ./...
 
-# clean: Removes the built binary to clean up the project directory.
 clean:
-	@echo "Cleaning up..."
 	rm -f $(BINARY_NAME)
+
+.PHONY: all build publish run fmt vet test clean
