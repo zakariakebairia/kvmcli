@@ -120,7 +120,6 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	spec.Attrs["disk_path"] = dest
 	spec.Status = "running"
 
-	fmt.Printf("vm/%s created\n", spec.Name)
 	return nil
 }
 
@@ -145,7 +144,6 @@ func (l *VMLifecycle) Destroy(session registry.Session, current registry.Object)
 		}
 	}
 
-	fmt.Printf("vm/%s deleted\n", current.Name)
 	return nil
 }
 

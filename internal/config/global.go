@@ -23,7 +23,8 @@ type GlobalConfig struct {
 }
 
 type MetaConfig struct {
-	Version int `toml:"version"`
+	Version int  `toml:"version"`
+	Verbose bool `toml:"verbose"`
 }
 
 type PathsConfig struct {

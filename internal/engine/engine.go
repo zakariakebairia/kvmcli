@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/zakariakebairia/kvmcli/internal/database"
+	logger "github.com/zakariakebairia/kvmcli/internal/logger"
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
@@ -40,14 +41,17 @@ func (e *Engine) Apply(desired []registry.Object) error {
 				Current: nil,
 			}
 
+			resource := obj.TypeName + "/" + obj.Name
 			if err := resourceType.Lifecycle.Apply(e.session, change); err != nil {
-				return fmt.Errorf("apply %s/%s: %w", obj.TypeName, obj.Name, err)
+				logger.Info(resource, "create", err)
+				return fmt.Errorf("apply %s: %w", resource, err)
 			}
 
 			obj.Status = "created"
 			if err := e.dbHandler.Put(e.session.Ctx, &obj); err != nil {
-				return fmt.Errorf("save state %s/%s: %w", obj.TypeName, obj.Name, err)
+				return fmt.Errorf("save state %s: %w", resource, err)
 			}
+			logger.Info(resource, obj.Status, nil)
 		}
 	}
 	return nil
@@ -60,14 +64,15 @@ func (e *Engine) Destroy(targets []registry.Object) error {
 
 	for _, level := range levels {
 		for _, obj := range level {
+			resource := obj.TypeName + "/" + obj.Name
 			rt, ok := registry.Get(obj.TypeName)
 			if !ok {
-				fmt.Printf("warning: unknown resource type %s, skipping\n", obj.TypeName)
+				logger.Warnf("unknown resource type %s, skipping", obj.TypeName)
 				continue
 			}
 
 			if err := rt.Lifecycle.Destroy(e.session, obj); err != nil {
-				fmt.Printf("warning: failed to destroy %s/%s: %v\n", obj.TypeName, obj.Name, err)
+				logger.Info(resource, "destroy", err)
 				continue
 			}
 
@@ -77,9 +82,10 @@ func (e *Engine) Destroy(targets []registry.Object) error {
 				obj.Name,
 				obj.Namespace,
 			); err != nil {
-				fmt.Printf("warning: failed to remove state %s/%s: %v\n", obj.TypeName, obj.Name, err)
+				logger.Info(resource, "remove state", err)
 				continue
 			}
+			logger.Info(resource, "deleted", nil)
 		}
 	}
 	return nil

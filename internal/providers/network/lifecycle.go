@@ -65,7 +65,6 @@ func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Chang
 	}
 
 	spec.Status = "created"
-	fmt.Printf("network/%s created\n", spec.Name)
 	return nil
 }
 
@@ -83,7 +82,6 @@ func (l *NetworkLifecycle) Destroy(session registry.Session, current registry.Ob
 		return fmt.Errorf("undefine network %q: %w", current.Name, err)
 	}
 
-	fmt.Printf("network/%s deleted\n", current.Name)
 	return nil
 }
 

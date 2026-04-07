@@ -54,14 +54,12 @@ func (l *StoreLifecycle) Apply(session registry.Session, change registry.Change)
 		}
 	}
 
-	fmt.Printf("store/%s created\n", spec.Name)
 	return nil
 }
 
 func (l *StoreLifecycle) Destroy(session registry.Session, current registry.Object) error {
 	// Images are cleaned up by ON DELETE CASCADE in the images table FK.
 	// The engine handles removing the state from the resources table.
-	fmt.Printf("store/%s deleted\n", current.Name)
 	return nil
 }
 
