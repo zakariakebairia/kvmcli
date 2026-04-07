@@ -6,6 +6,7 @@ import (
 	"net"
 	"path/filepath"
 
+	logger "github.com/zakariakebairia/kvmcli/internal/logger"
 	"github.com/zakariakebairia/kvmcli/internal/providers/network"
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 	"github.com/zakariakebairia/kvmcli/internal/templates"
@@ -70,8 +71,7 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	dest := filepath.Join(imagesPath, spec.Name+".qcow2")
 
 	// Step 3: Create disk overlay
-	disk := newDiskManager()
-	if err := disk.CreateOverlay(session.Ctx, src, dest); err != nil {
+	if err := createOverlay(session.Ctx, src, dest); err != nil {
 		return fmt.Errorf("create disk overlay: %w", err)
 	}
 
@@ -79,13 +79,13 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	netName := attrStr(*spec, "network")
 	xmlConfig, err := buildDomainXML(spec, dest, netName, macAddress, osProfile)
 	if err != nil {
-		disk.DeleteOverlay(session.Ctx, dest)
+		deleteOverlay(session.Ctx, dest)
 		return fmt.Errorf("build XML: %w", err)
 	}
 
 	dom, err := session.Conn.DomainDefineXML(xmlConfig)
 	if err != nil {
-		disk.DeleteOverlay(session.Ctx, dest)
+		deleteOverlay(session.Ctx, dest)
 		return fmt.Errorf("define domain %q: %w", spec.Name, err)
 	}
 
@@ -103,7 +103,7 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 			parsedMAC,
 		); err != nil {
 			session.Conn.DomainUndefineFlags(dom, 0)
-			disk.DeleteOverlay(session.Ctx, dest)
+			deleteOverlay(session.Ctx, dest)
 			return fmt.Errorf("set static mapping: %w", err)
 		}
 	}
@@ -111,7 +111,7 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	// Step 6: Start the VM
 	if err := session.Conn.DomainCreate(dom); err != nil {
 		session.Conn.DomainUndefineFlags(dom, 0)
-		disk.DeleteOverlay(session.Ctx, dest)
+		deleteOverlay(session.Ctx, dest)
 		return fmt.Errorf("start domain %q: %w", spec.Name, err)
 	}
 
@@ -138,9 +138,8 @@ func (l *VMLifecycle) Destroy(session registry.Session, current registry.Object)
 
 	// Delete disk overlay
 	if diskPath := attrStr(current, "disk_path"); diskPath != "" {
-		disk := newDiskManager()
-		if err := disk.DeleteOverlay(session.Ctx, diskPath); err != nil {
-			fmt.Printf("warning: failed to delete disk %s: %v\n", diskPath, err)
+		if err := deleteOverlay(session.Ctx, diskPath); err != nil {
+			logger.Warnf("failed to delete disk %s: %v", diskPath, err)
 		}
 	}
 
