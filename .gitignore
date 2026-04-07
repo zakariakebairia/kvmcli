@@ -20,6 +20,8 @@ tmp
 !README.md
 *.org
 
+# Others
+*.off
 # Specific files
 configs/test.hcl
 verify_datasource.hcl
