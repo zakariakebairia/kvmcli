@@ -1,6 +1,7 @@
 # Build artifacts
 kvmcli
 tmp
+docs
 
 # Database
 *.db
