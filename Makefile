@@ -17,6 +17,10 @@ all: build
 build:
 	@echo "Building $(BINARY_NAME)..."
 	CGO_CFLAGS="-Wno-discarded-qualifiers" $(BINARY_PATH) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) .
+
+publish:
+	@echo "Building $(BINARY_NAME)..."
+	CGO_CFLAGS="-Wno-discarded-qualifiers" $(BINARY_PATH) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) .
 	cp $(BINARY_NAME) ~/.local/bin/
 
 # run: Builds the project (if necessary) and runs the executable.
