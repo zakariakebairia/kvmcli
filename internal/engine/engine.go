@@ -10,6 +10,9 @@ import (
 // Engine orchestrates resource lifecycle.
 // It looks up the correct provider via the registry, calls its lifecycle methods,
 // and persists state via the DBHandler.
+
+// session carries (ctx, sql connection, libvirt connection)
+
 type Engine struct {
 	dbHandler *database.DBHandler
 	session   registry.Session
@@ -22,25 +25,29 @@ func New(session registry.Session, dbHandler *database.DBHandler) *Engine {
 // Apply creates each desired resource and persists its state.
 // Later this will diff desired vs current and handle dependency ordering.
 func (e *Engine) Apply(desired []registry.Object) error {
-	for _, obj := range desired {
-		resourceType, ok := registry.Get(obj.TypeName)
-		if !ok {
-			return fmt.Errorf("unknown resource type: %s", obj.TypeName)
-		}
+	levels := sortByDependency(desired, false)
 
-		change := registry.Change{
-			Action:  registry.ActionCreate,
-			Desired: &obj,
-			Current: nil,
-		}
+	for _, level := range levels {
+		for _, obj := range level {
+			resourceType, ok := registry.Get(obj.TypeName)
+			if !ok {
+				return fmt.Errorf("unknown resource type: %s", obj.TypeName)
+			}
 
-		if err := resourceType.Lifecycle.Apply(e.session, change); err != nil {
-			return fmt.Errorf("apply %s/%s: %w", obj.TypeName, obj.Name, err)
-		}
+			change := registry.Change{
+				Action:  registry.ActionCreate,
+				Desired: &obj,
+				Current: nil,
+			}
 
-		obj.Status = "created"
-		if err := e.dbHandler.Put(e.session.Ctx, &obj); err != nil {
-			return fmt.Errorf("save state %s/%s: %w", obj.TypeName, obj.Name, err)
+			if err := resourceType.Lifecycle.Apply(e.session, change); err != nil {
+				return fmt.Errorf("apply %s/%s: %w", obj.TypeName, obj.Name, err)
+			}
+
+			obj.Status = "created"
+			if err := e.dbHandler.Put(e.session.Ctx, &obj); err != nil {
+				return fmt.Errorf("save state %s/%s: %w", obj.TypeName, obj.Name, err)
+			}
 		}
 	}
 	return nil
@@ -49,26 +56,30 @@ func (e *Engine) Apply(desired []registry.Object) error {
 // Destroy tears down each target resource and removes its state.
 // Later this will handle reverse dependency ordering.
 func (e *Engine) Destroy(targets []registry.Object) error {
-	for _, obj := range targets {
-		rt, ok := registry.Get(obj.TypeName)
-		if !ok {
-			fmt.Printf("warning: unknown resource type %s, skipping\n", obj.TypeName)
-			continue
-		}
+	levels := sortByDependency(targets, true)
 
-		if err := rt.Lifecycle.Destroy(e.session, obj); err != nil {
-			fmt.Printf("warning: failed to destroy %s/%s: %v\n", obj.TypeName, obj.Name, err)
-			continue
-		}
+	for _, level := range levels {
+		for _, obj := range level {
+			rt, ok := registry.Get(obj.TypeName)
+			if !ok {
+				fmt.Printf("warning: unknown resource type %s, skipping\n", obj.TypeName)
+				continue
+			}
 
-		if err := e.dbHandler.Remove(
-			e.session.Ctx,
-			obj.TypeName,
-			obj.Name,
-			obj.Namespace,
-		); err != nil {
-			fmt.Printf("warning: failed to remove state %s/%s: %v\n", obj.TypeName, obj.Name, err)
-			continue
+			if err := rt.Lifecycle.Destroy(e.session, obj); err != nil {
+				fmt.Printf("warning: failed to destroy %s/%s: %v\n", obj.TypeName, obj.Name, err)
+				continue
+			}
+
+			if err := e.dbHandler.Remove(
+				e.session.Ctx,
+				obj.TypeName,
+				obj.Name,
+				obj.Namespace,
+			); err != nil {
+				fmt.Printf("warning: failed to remove state %s/%s: %v\n", obj.TypeName, obj.Name, err)
+				continue
+			}
 		}
 	}
 	return nil
