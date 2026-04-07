@@ -4,6 +4,11 @@
 BINARY_NAME = kvmcli
 BINARY_PATH = /usr/local/go/bin/go
 VERSION ?= $(shell git describe --tags --always --dirty)
+COMMIT  ?= $(shell git rev-parse --short HEAD)
+BUILT   ?= $(shell date -u +%Y-%m-%dT%H:%M:%SZ)
+PKG     := github.com/zakariakebairia/kvmcli/cmd
+LDFLAGS := -X $(PKG).Version=$(VERSION) -X $(PKG).Commit=$(COMMIT) -X $(PKG).Built=$(BUILT)
+
 
 # The default target: when you run "make" without arguments, it will run the "build" target.
 all: build
@@ -11,7 +16,7 @@ all: build
 # build: Compiles the Go project into a binary executable.
 build:
 	@echo "Building $(BINARY_NAME)..."
-	CGO_CFLAGS="-Wno-discarded-qualifiers" $(BINARY_PATH)  build -ldflags "-X github.com/zakariakebairia/kvmcli/cmd.Version=$(VERSION)" -o $(BINARY_NAME) .
+	CGO_CFLAGS="-Wno-discarded-qualifiers" $(BINARY_PATH) build -ldflags "$(LDFLAGS)" -o $(BINARY_NAME) .
 	cp $(BINARY_NAME) ~/.local/bin/
 
 # run: Builds the project (if necessary) and runs the executable.
