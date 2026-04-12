@@ -51,20 +51,20 @@ func (s *DBHandler) Get(
     WHERE type = ? AND name = ? AND namespace = ?
     `
 	var labelsRaw, attrsRaw string
-	state := &registry.Object{}
+	object := &registry.Object{}
 	err := s.db.QueryRowContext(ctx, query, typeName, name, namespace).Scan(
-		&state.TypeName, &state.Name, &state.Namespace, &labelsRaw, &attrsRaw, &state.Status,
+		&object.TypeName, &object.Name, &object.Namespace, &labelsRaw, &attrsRaw, &object.Status,
 	)
 	if err == sql.ErrNoRows {
-		return nil, nil // not found = no current state
+		return nil, nil // not found = no current object
 	}
 	if err != nil {
-		return nil, fmt.Errorf("get state: %w", err)
+		return nil, fmt.Errorf("get object: %w", err)
 	}
 
-	json.Unmarshal([]byte(labelsRaw), &state.Labels)
-	json.Unmarshal([]byte(attrsRaw), &state.Attrs)
-	return state, nil
+	json.Unmarshal([]byte(labelsRaw), &object.Labels)
+	json.Unmarshal([]byte(attrsRaw), &object.Attrs)
+	return object, nil
 }
 
 // List retrieves all resources of a given type (or all types if typeName is "").
@@ -106,10 +106,10 @@ func (s *DBHandler) List(ctx context.Context, typeName string) ([]registry.Objec
 	return results, rows.Err()
 }
 
-// Put inserts or updates a resource state.
-func (s *DBHandler) Put(ctx context.Context, state *registry.Object) error {
-	labelsJSON, _ := json.Marshal(state.Labels)
-	attrsJSON, _ := json.Marshal(state.Attrs)
+// Put inserts or updates an object.
+func (s *DBHandler) Put(ctx context.Context, object *registry.Object) error {
+	labelsJSON, _ := json.Marshal(object.Labels)
+	attrsJSON, _ := json.Marshal(object.Attrs)
 
 	const query = `
         INSERT INTO resources (type, name, namespace, labels, attrs, status)
@@ -121,13 +121,13 @@ func (s *DBHandler) Put(ctx context.Context, state *registry.Object) error {
             updated_at = CURRENT_TIMESTAMP
     `
 	_, err := s.db.ExecContext(ctx, query,
-		state.TypeName, state.Name, state.Namespace,
-		string(labelsJSON), string(attrsJSON), state.Status,
+		object.TypeName, object.Name, object.Namespace,
+		string(labelsJSON), string(attrsJSON), object.Status,
 	)
 	return err
 }
 
-// Remove deletes a resource state.
+// Remove deletes a resource object.
 func (s *DBHandler) Remove(ctx context.Context, typeName, name, namespace string) error {
 	const query = `DELETE FROM resources WHERE type = ? AND name = ? AND namespace = ?`
 	_, err := s.db.ExecContext(ctx, query, typeName, name, namespace)

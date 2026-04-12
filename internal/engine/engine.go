@@ -30,9 +30,9 @@ func (e *Engine) Apply(desired []registry.Object) error {
 
 	for _, level := range levels {
 		for _, obj := range level {
-			resourceType, ok := registry.Get(obj.TypeName)
+			objectType, ok := registry.Get(obj.TypeName)
 			if !ok {
-				return fmt.Errorf("unknown resource type: %s", obj.TypeName)
+				return fmt.Errorf("unknown object type: %s", obj.TypeName)
 			}
 
 			change := registry.Change{
@@ -42,14 +42,14 @@ func (e *Engine) Apply(desired []registry.Object) error {
 			}
 
 			resource := obj.TypeName + "/" + obj.Name
-			if err := resourceType.Lifecycle.Apply(e.session, change); err != nil {
+			if err := objectType.Lifecycle.Apply(e.session, change); err != nil {
 				logger.Info(resource, "create", err)
 				return fmt.Errorf("apply %s: %w", resource, err)
 			}
 
 			obj.Status = "created"
 			if err := e.dbHandler.Put(e.session.Ctx, &obj); err != nil {
-				return fmt.Errorf("save state %s: %w", resource, err)
+				return fmt.Errorf("save object %s: %w", resource, err)
 			}
 			logger.Info(resource, obj.Status, nil)
 		}
@@ -67,7 +67,7 @@ func (e *Engine) Destroy(targets []registry.Object) error {
 			resource := obj.TypeName + "/" + obj.Name
 			rt, ok := registry.Get(obj.TypeName)
 			if !ok {
-				logger.Warnf("unknown resource type %s, skipping", obj.TypeName)
+				logger.Warnf("unknown object type %s, skipping", obj.TypeName)
 				continue
 			}
 
