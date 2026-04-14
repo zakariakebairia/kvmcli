@@ -20,15 +20,16 @@ func init() {
 			return []string{
 				s.Name,
 				s.Namespace,
-				attrStr(s, "backend"),
-				attrStr(s, "artifacts_path"),
-				attrStr(s, "images_path"),
+				s.GetString("backend"),
+				s.GetString("artifacts_path"),
+				s.GetString("images_path"),
 				s.Status,
 			}
 		},
 	})
 }
 
+// I might change this into a Pool and Volumes
 // StoreLifecycle implements registry.ResourceLifecycle.
 type StoreLifecycle struct{}
 
@@ -61,14 +62,6 @@ func (l *StoreLifecycle) Destroy(session registry.Session, current registry.Obje
 	// Images are cleaned up by ON DELETE CASCADE in the images table FK.
 	// The engine handles removing the state from the resources table.
 	return nil
-}
-
-// Helper
-func attrStr(s registry.Object, key string) string {
-	if value, ok := s.Attrs[key].(string); ok {
-		return value
-	}
-	return ""
 }
 
 func insertImages(

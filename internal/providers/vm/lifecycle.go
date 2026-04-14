@@ -12,21 +12,23 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/templates"
 )
 
+// type MACAddress = net.HardwareAddr
+
 func init() {
 	registry.Register(&registry.ResourceType{
 		Name:      "vm",
 		DependsOn: []string{"network", "store"},
 		Lifecycle: &VMLifecycle{},
 		Columns:   []string{"NAME", "NAMESPACE", "CPU", "RAM", "IP", "IMAGE", "STATUS"},
-		Format: func(s registry.Object) []string {
+		Format: func(object registry.Object) []string {
 			return []string{
-				s.Name,
-				s.Namespace,
-				fmt.Sprintf("%v", s.Attrs["cpu"]),
-				fmt.Sprintf("%v", s.Attrs["memory"]),
-				attrStr(s, "ip"),
-				attrStr(s, "image"),
-				s.Status,
+				object.Name,
+				object.Namespace,
+				fmt.Sprintf("%v", object.Attrs["cpu"]),
+				fmt.Sprintf("%v", object.Attrs["memory"]),
+				object.GetString("ip"),
+				object.GetString("image"),
+				object.Status,
 			}
 		},
 	})
@@ -62,7 +64,7 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	// Step 2: Look up image info from the store's state
 	artifactsPath, imagesPath, imageFile, osProfile, err := lookupImage(
 		session,
-		attrStr(*spec, "image"),
+		spec.GetString("image"),
 	)
 	if err != nil {
 		return fmt.Errorf("lookup image: %w", err)
@@ -77,7 +79,7 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	}
 
 	// Step 4: Build XML and define domain
-	netName := attrStr(*spec, "network")
+	netName := spec.GetString("network")
 	xmlConfig, err := buildDomainXML(spec, dest, netName, macAddress, osProfile)
 	if err != nil {
 		deleteOverlay(session.Ctx, dest)
@@ -91,7 +93,10 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	}
 
 	// Step 5: Set static IP mapping on the network
-	if ip := attrStr(*spec, "ip"); ip != "" {
+	// if ip := attrStr(*spec, "ip"); ip != "" {
+	// TODO: I need to work on this parsing functions below
+	// I think that the parsing needs to be on config loading stage
+	if ip := spec.GetString("ip"); ip != "" {
 		parsedIP := net.ParseIP(ip)
 		parsedMAC, err := net.ParseMAC(macAddress)
 		if err != nil {

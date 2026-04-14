@@ -17,10 +17,10 @@ type Session struct {
 type Action int
 
 const (
-	ActionNone Action = iota
-	ActionCreate
-	ActionUpdate
-	ActionDelete
+	ActionNone   Action = iota // 0
+	ActionCreate               // 1
+	ActionUpdate               // 2
+	ActionDelete               // 3
 )
 
 // Object is the unified struct for any resource (vm, network, store ...etc)
@@ -47,4 +47,19 @@ type Change struct {
 // this plan group them all
 type Plan struct {
 	Changes []Change
+}
+
+func (o *Object) GetString(key string) string {
+	value, _ := o.Attrs[key].(string)
+	return value
+}
+
+func (o *Object) GetInt(key string) int {
+	value, _ := o.Attrs[key].(int)
+	return value
+}
+
+func (o *Object) GetBool(key string) bool {
+	value, _ := o.Attrs[key].(bool)
+	return value
 }

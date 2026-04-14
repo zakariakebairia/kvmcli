@@ -22,16 +22,16 @@ func prepareNetworkXML(obj *registry.Object) (string, error) {
 		}
 	}
 
-	if bridge := attrStr(*obj, "bridge"); bridge != "" {
+	if bridge := obj.GetString("bridge"); bridge != "" {
 		opts = append(opts, templates.WithBridge(bridge))
 	}
 
 	netXML := templates.NewNetwork(
 		obj.Name,
-		attrStr(*obj, "mode"),
-		attrStr(*obj, "net_address"),
-		attrStr(*obj, "netmask"),
-		attrBool(*obj, "autostart"),
+		obj.GetString("mode"),
+		obj.GetString("net_address"),
+		obj.GetString("netmask"),
+		obj.GetBool("autostart"),
 		opts...,
 	)
 
@@ -41,9 +41,4 @@ func prepareNetworkXML(obj *registry.Object) (string, error) {
 	}
 
 	return xml.Header + string(xmlConfig), nil
-}
-
-func attrBool(s registry.Object, key string) bool {
-	value, _ := s.Attrs[key].(bool)
-	return value
 }

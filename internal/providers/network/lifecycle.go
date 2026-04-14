@@ -12,14 +12,14 @@ func init() {
 		DependsOn: []string{},
 		Lifecycle: &NetworkLifecycle{},
 		Columns:   []string{"NAME", "NAMESPACE", "BRIDGE", "MODE", "ADDRESS", "STATUS"},
-		Format: func(s registry.Object) []string {
+		Format: func(n registry.Object) []string {
 			return []string{
-				s.Name,
-				s.Namespace,
-				attrStr(s, "bridge"),
-				attrStr(s, "mode"),
-				attrStr(s, "net_address"),
-				s.Status,
+				n.Name,
+				n.Namespace,
+				n.GetString("bridge"),
+				n.GetString("mode"),
+				n.GetString("net_address"),
+				n.Status,
 			}
 		},
 	})
@@ -57,10 +57,11 @@ func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Chang
 		return fmt.Errorf("start network %q: %w", spec.Name, err)
 	}
 
-	// Enable autostart if requested
-	if attrBool(*spec, "autostart") {
-		if err := session.Conn.NetworkSetAutostart(netInstance, 1); err != nil {
-			return fmt.Errorf("set autostart for network %q: %w", spec.Name, err)
+	if spec.GetBool("autostart") {
+		{
+			if err := session.Conn.NetworkSetAutostart(netInstance, 1); err != nil {
+				return fmt.Errorf("set autostart for network %q: %w", spec.Name, err)
+			}
 		}
 	}
 
@@ -83,12 +84,4 @@ func (l *NetworkLifecycle) Destroy(session registry.Session, current registry.Ob
 	}
 
 	return nil
-}
-
-// attrStr extracts a string attribute from an Object.
-func attrStr(s registry.Object, key string) string {
-	if value, ok := s.Attrs[key].(string); ok {
-		return value
-	}
-	return ""
 }
