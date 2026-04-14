@@ -54,6 +54,7 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 
 	// Step 1: Resolve MAC address
 	macAddress, err := network.ResolveMAC("02:aa:bb", attrStr(*spec, "ip"), attrStr(*spec, "mac"))
+	macAddress, err := network.IP2MAC(spec.GetString("ip"))
 	if err != nil {
 		return fmt.Errorf("resolve mac for %q: %w", spec.Name, err)
 	}
