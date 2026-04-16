@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"fmt"
 	"log"
 	"net/url"
 
@@ -8,8 +9,11 @@ import (
 )
 
 // ConnectLibvirt create and returns a libvirt connection
-func InitConnection() (*libvirt.Libvirt, error) {
-	uri, _ := url.Parse(string(libvirt.QEMUSystem))
+func ConnectLibvirt() (*libvirt.Libvirt, error) {
+	uri, err := url.Parse(string(libvirt.QEMUSystem))
+	if err != nil {
+		return nil, fmt.Errorf("invalid url: %w", err)
+	}
 	l, err := libvirt.ConnectToURI(uri)
 	if err != nil {
 		log.Fatalf("failed to connect: %v", err)

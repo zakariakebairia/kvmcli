@@ -3,9 +3,9 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/spf13/cobra"
 	"github.com/zakariakebairia/kvmcli/internal"
 	"github.com/zakariakebairia/kvmcli/internal/providers/vm"
-	"github.com/spf13/cobra"
 )
 
 // CreateCmd represents the command to create resource(s) from a manifest file.
@@ -20,7 +20,7 @@ var startVmCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		vmName := args[0]
-		conn, err := internal.InitConnection()
+		conn, err := internal.ConnectLibvirt()
 		if err != nil {
 			fmt.Println("init libvirt: %w", err)
 		}

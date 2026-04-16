@@ -27,7 +27,7 @@ func NewSession(ctx context.Context) (registry.Session, func(), error) {
 	}
 
 	// Connect to libvirt
-	conn, err := internal.InitConnection()
+	conn, err := internal.ConnectLibvirt()
 	if err != nil {
 		return registry.Session{}, nil, fmt.Errorf("init libvirt: %w", err)
 	}
