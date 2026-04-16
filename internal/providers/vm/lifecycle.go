@@ -66,12 +66,13 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 		session,
 		spec.GetString("image"),
 	)
+	image, err := getImage(session, spec.GetString("image"))
 	if err != nil {
 		return fmt.Errorf("lookup image: %w", err)
 	}
 
-	src := filepath.Join(artifactsPath, imageFile)
-	dest := filepath.Join(imagesPath, spec.Name+".qcow2")
+	src := filepath.Join(image.ArtifactsPath, image.ImageFile)
+	dest := filepath.Join(image.ImagesPath, spec.Name+".qcow2")
 
 	// Step 3: Create disk overlay
 	if err := createOverlay(session.Ctx, src, dest); err != nil {
@@ -80,7 +81,7 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 
 	// Step 4: Build XML and define domain
 	netName := spec.GetString("network")
-	xmlConfig, err := buildDomainXML(spec, dest, netName, macAddress, osProfile)
+	xmlConfig, err := buildDomainXML(spec, dest, netName, macAddress, image.OsProfile)
 	if err != nil {
 		deleteOverlay(session.Ctx, dest)
 		return fmt.Errorf("build XML: %w", err)
@@ -93,7 +94,6 @@ func (l *VMLifecycle) Apply(session registry.Session, change registry.Change) er
 	}
 
 	// Step 5: Set static IP mapping on the network
-	// if ip := attrStr(*spec, "ip"); ip != "" {
 	// TODO: I need to work on this parsing functions below
 	// I think that the parsing needs to be on config loading stage
 	if ip := spec.GetString("ip"); ip != "" {
