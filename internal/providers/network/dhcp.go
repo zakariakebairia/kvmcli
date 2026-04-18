@@ -5,9 +5,11 @@ import (
 	"net"
 
 	"github.com/digitalocean/go-libvirt"
+	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
-func (m *NetworkManager) modifyDHCPHost(
+func modifyDHCPHost(
+	session registry.Session,
 	nw libvirt.Network,
 	ip net.IP,
 	mac net.HardwareAddr,
@@ -15,7 +17,7 @@ func (m *NetworkManager) modifyDHCPHost(
 ) error {
 	xmlEntry := dhcpHostXML(mac, ip)
 
-	return m.conn.NetworkUpdate(
+	return session.Conn.NetworkUpdate(
 		nw,
 		uint32(libvirt.NetworkUpdateCommandModify),
 		uint32(libvirt.NetworkSectionIPDhcpHost),
@@ -25,14 +27,15 @@ func (m *NetworkManager) modifyDHCPHost(
 	)
 }
 
-func (m *NetworkManager) deleteDHCPHost(
+func deleteDHCPHost(
+	session registry.Session,
 	nw libvirt.Network,
 	mac net.HardwareAddr,
 	flags libvirt.NetworkUpdateFlags,
 ) error {
 	selector := dhcpHostSelectorXML(mac)
 
-	return m.conn.NetworkUpdate(
+	return session.Conn.NetworkUpdate(
 		nw,
 		uint32(libvirt.NetworkUpdateCommandDelete),
 		uint32(libvirt.NetworkSectionIPDhcpHost),
@@ -42,7 +45,8 @@ func (m *NetworkManager) deleteDHCPHost(
 	)
 }
 
-func (m *NetworkManager) addDHCPHost(
+func addDHCPHost(
+	session registry.Session,
 	nw libvirt.Network,
 	ip net.IP,
 	mac net.HardwareAddr,
@@ -50,7 +54,7 @@ func (m *NetworkManager) addDHCPHost(
 ) error {
 	xml := dhcpHostXML(mac, ip)
 
-	return m.conn.NetworkUpdate(
+	return session.Conn.NetworkUpdate(
 		nw,
 		uint32(libvirt.NetworkUpdateCommandAddLast),
 		uint32(libvirt.NetworkSectionIPDhcpHost),

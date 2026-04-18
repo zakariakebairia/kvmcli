@@ -1,54 +1,35 @@
 package network
 
 import (
-	"database/sql"
 	"fmt"
-	"net"
 
 	"github.com/digitalocean/go-libvirt"
+	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
-type NetworkManager struct {
-	conn *libvirt.Libvirt
-	db   *sql.DB
-}
-
-func NewNetworkManager(conn *libvirt.Libvirt, db *sql.DB) *NetworkManager {
-	return &NetworkManager{conn: conn, db: db}
-}
-
+// TODO: I need to fix this, not clean, over engineered
 // SetStaticMapping ensures a DHCP reservation (MAC → IP) exists on a libvirt network.
-//
-// Semantics:
-// - If mapping exists: update it to the requested IP (Modify; fallback Delete+Add)
-// - If mapping does not exist: create it
-func (m *NetworkManager) SetStaticMapping(
-	networkName string,
-	ip net.IP,
-	mac net.HardwareAddr,
-) error {
-	nw, err := m.conn.NetworkLookupByName(networkName)
-	if err != nil {
-		return fmt.Errorf("lookup network %q: %w", networkName, err)
-	}
+func SetStaticMapping(session registry.Session, spec *registry.Object, hostAddr *HostAddr) error {
+	networkName := spec.GetString("network")
 
 	flags := libvirt.NetworkUpdateAffectLive | libvirt.NetworkUpdateAffectConfig
 
-	// 1) Modify (clean path if host entry exists)
-	if err := m.modifyDHCPHost(nw, ip, mac, flags); err == nil {
+	nw, err := session.Conn.NetworkLookupByName(networkName)
+	if err != nil {
+		return fmt.Errorf("lookup network %q: %w", networkName, err)
+	}
+	if err := modifyDHCPHost(session, nw, hostAddr.IP, hostAddr.MAC, flags); err == nil {
 		return nil
 	}
 
-	// 2) Fallback: Delete (ignore if missing) then Add
-	// Delete by MAC selector only.
-	_ = m.deleteDHCPHost(nw, mac, flags)
+	_ = deleteDHCPHost(session, nw, hostAddr.MAC, flags)
 
-	if err := m.addDHCPHost(nw, ip, mac, flags); err != nil {
+	if err := addDHCPHost(session, nw, hostAddr.IP, hostAddr.MAC, flags); err != nil {
 		return fmt.Errorf(
 			"set dhcp mapping on network %q (mac=%s ip=%s): %w",
 			networkName,
-			mac,
-			ip,
+			hostAddr.MAC,
+			hostAddr.IP,
 			err,
 		)
 	}
