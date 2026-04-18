@@ -41,7 +41,7 @@ func (l *NetworkLifecycle) Plan(desired, current *registry.Object) (registry.Act
 func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Change) error {
 	spec := change.Desired
 
-	xmlConfig, err := prepareNetworkXML(spec)
+	xmlConfig, err := buildNetworkXML(spec)
 	if err != nil {
 		return err
 	}

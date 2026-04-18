@@ -8,10 +8,8 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/templates"
 )
 
-}
-
 // prepareNetworkXML generates the libvirt XML definition from an Object.
-func prepareNetworkXML(obj *registry.Object) (string, error) {
+func buildNetworkXML(obj *registry.Object) (string, error) {
 	var opts []templates.NetworkOption
 
 	if dhcp, ok := obj.Attrs["dhcp"].(map[string]any); ok {

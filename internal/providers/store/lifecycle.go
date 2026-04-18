@@ -54,7 +54,6 @@ func (l *StoreLifecycle) Apply(session registry.Session, change registry.Change)
 			return err
 		}
 	}
-
 	return nil
 }
 
