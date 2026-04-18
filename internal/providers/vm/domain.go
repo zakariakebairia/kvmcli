@@ -80,9 +80,9 @@ func defineDomain(
 		return domain, fmt.Errorf("build XML: %w", err)
 	}
 	domain, err = session.Conn.DomainDefineXML(xml)
+	// Naked return: implicitly returns the named result parameters declared in the function signature.
 	if err != nil {
-		// TODO: fix this
-		return domain, fmt.Errorf("define domain %q: %w", spec.Name, err)
+		return
 	}
 	return domain, nil
 }
