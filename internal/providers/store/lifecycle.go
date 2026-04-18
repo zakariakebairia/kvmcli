@@ -6,13 +6,9 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
-const (
-	storeObjName = "store"
-)
-
 func init() {
 	registry.Register(&registry.ResourceType{
-		Name:      storeObjName,
+		Name:      "store",
 		DependsOn: []string{}, // stores have no dependencies
 		Lifecycle: &StoreLifecycle{},
 		Columns:   []string{"NAME", "NAMESPACE", "BACKEND", "ARTIFACTS", "IMAGES", "STATUS"},
