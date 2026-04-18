@@ -41,7 +41,12 @@ func deleteOverlay(dest string) error {
 }
 
 func provisionDisk(session registry.Session, spec *registry.Object) (string, error) {
-	image, err := getImage(session, spec.GetString("store"), spec.GetString("image"))
+	image, err := getImage(
+		session,
+		spec.GetString("store"),
+		spec.GetString("image"),
+		spec.Namespace,
+	)
 	if err != nil {
 		return "", fmt.Errorf("lookup image: %w", err)
 	}

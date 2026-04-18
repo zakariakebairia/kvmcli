@@ -33,3 +33,5 @@ func ensureImagesTable(ctx context.Context, db *sql.DB) error {
 	}
 	return nil
 }
+
+// func GetImage(name string) {}

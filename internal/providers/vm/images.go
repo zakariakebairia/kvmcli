@@ -15,11 +15,13 @@ type Image struct {
 }
 
 // IDEA: I will add store to the arguments of the function
-// func getImage(session registry.Session, store, imageName, string) (*Image, error)
+//	func getImage(session registry.Session, store, imageName, string) (*Image, error)
+//
+// FIX: What if the store and other object are in different namespaces
 
-func getImage(session registry.Session, storeName, imageName string) (*Image, error) {
+func getImage(session registry.Session, storeName, imageName, nameSpace string) (*Image, error) {
 	dbHandler := database.NewDBHandler(session.DB)
-	store, err := dbHandler.Get(session.Ctx, "store", storeName, "homelab")
+	store, err := dbHandler.Get(session.Ctx, "store", storeName, nameSpace)
 	if err != nil {
 		return nil, fmt.Errorf("list stores: %w", err)
 	}
