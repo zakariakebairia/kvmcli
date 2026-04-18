@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
@@ -26,8 +27,19 @@ func createOverlay(ctx context.Context, src, dest string) error {
 	return nil
 }
 
-func resizeOverlay(ctx context.Context, dest string) error {
-	// args := []string{}
+func resizeOverlay(ctx context.Context, dest, size string) error {
+	if strings.HasPrefix(size, "-") {
+		return fmt.Errorf("shrinking overlays is not supported: %q", size)
+	}
+	args := []string{
+		"resize",
+		dest,
+		size,
+	}
+	output, err := exec.CommandContext(ctx, QemuImgBinary, args...).CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("resize overlay: %w: %s", err, output)
+	}
 	return nil
 }
 
