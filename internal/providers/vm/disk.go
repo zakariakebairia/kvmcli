@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+
+	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
 var QemuImgBinary = "qemu-img"
@@ -35,4 +38,18 @@ func deleteOverlay(ctx context.Context, dest string) error {
 	}
 	// otherwise, return nil
 	return nil
+}
+
+func provisionDisk(session registry.Session, spec *registry.Object) (path string, err error) {
+	image, err := getImage(session, spec.GetString("image"))
+	if err != nil {
+		return "", fmt.Errorf("lookup image: %w", err)
+	}
+	src := filepath.Join(image.ArtifactsPath, image.ImageFile)
+	dest := filepath.Join(image.ImagesPath, spec.Name+".qcow2")
+	// Create disk overlay
+	if err := createOverlay(session.Ctx, src, dest); err != nil {
+		return "", fmt.Errorf("create disk overlay: %w", err)
+	}
+	return dest, nil
 }
