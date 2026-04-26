@@ -57,7 +57,7 @@ func (l *StoreLifecycle) Apply(session registry.Session, change registry.Change)
 	return nil
 }
 
-func (l *StoreLifecycle) Destroy(session registry.Session, current registry.Object) error {
+func (l *StoreLifecycle) Destroy(session registry.Session, change registry.Change) error {
 	// Images are cleaned up by ON DELETE CASCADE in the images table FK.
 	// The engine handles removing the state from the resources table.
 	return nil

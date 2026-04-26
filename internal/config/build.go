@@ -64,14 +64,14 @@ func buildObjects(cfg *hclConfig) []registry.Object {
 			Namespace: v.Namespace,
 			Labels:    v.Labels,
 			Attrs: map[string]any{
-				"cpu":     v.CPU,
-				"memory":  v.Memory,
-				"disk":    v.Disk,
-				"image":   v.Image,
-				"network": v.NetName,
-				"store":   v.Store,
-				"ip":      v.IP,
-				"mac":     v.MAC,
+				"cpu":         v.CPU,
+				"memory":      v.Memory,
+				"disk":        v.Disk,
+				"image":       v.Image,
+				"network":     v.NetName,
+				"store":       v.Store,
+				"ip":          v.IP,
+				"mac_address": v.MAC,
 			},
 		})
 	}

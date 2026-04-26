@@ -63,29 +63,50 @@ func (e *Engine) Destroy(targets []registry.Object) error {
 	levels := sortByDependency(targets, true)
 
 	for _, level := range levels {
-		for _, obj := range level {
-			resource := obj.TypeName + "/" + obj.Name
-			rt, ok := registry.Get(obj.TypeName)
+		for _, instance := range level {
+			resource := instance.TypeName + "/" + instance.Name
+			rt, ok := registry.Get(instance.TypeName)
 			if !ok {
-				logger.Warnf("unknown object type %s, skipping", obj.TypeName)
+				logger.Warnf("unknown object type %s, skipping", instance.TypeName)
+				continue
+			}
+			// Get full object info from the database
+			object, err := e.dbHandler.Get(
+				e.session.Ctx,
+				instance.TypeName,
+				instance.Name,
+				instance.Namespace,
+			)
+			if err != nil {
+				return fmt.Errorf("get %s: %w", object, err)
+			}
+			if object == nil {
+				logger.Errorf("%s not found in database, skipping", resource)
 				continue
 			}
 
-			if err := rt.Lifecycle.Destroy(e.session, obj); err != nil {
+			change := registry.Change{
+				Action:  registry.ActionDelete,
+				Desired: nil,
+				Current: object,
+			}
+
+			if err := rt.Lifecycle.Destroy(e.session, change); err != nil {
 				logger.Info(resource, "destroy", err)
 				continue
 			}
 
 			if err := e.dbHandler.Remove(
 				e.session.Ctx,
-				obj.TypeName,
-				obj.Name,
-				obj.Namespace,
+				object.TypeName,
+				object.Name,
+				object.Namespace,
 			); err != nil {
-				logger.Info(resource, "remove state", err)
+				// logger.Info(resource, "remove state", err)
+				fmt.Printf("%s/%s, remove state, %v", object.TypeName, object.Name, err)
 				continue
 			}
-			logger.Info(resource, "deleted", nil)
+			fmt.Printf("%s/%s deleted\n", object.TypeName, object.Name)
 		}
 	}
 	return nil

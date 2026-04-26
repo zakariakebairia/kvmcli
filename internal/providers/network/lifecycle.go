@@ -69,7 +69,9 @@ func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Chang
 	return nil
 }
 
-func (l *NetworkLifecycle) Destroy(session registry.Session, current registry.Object) error {
+func (l *NetworkLifecycle) Destroy(session registry.Session, change registry.Change) error {
+	current := change.Current
+
 	netInstance, err := session.Conn.NetworkLookupByName(current.Name)
 	if err != nil {
 		return fmt.Errorf("network %q not found: %w", current.Name, err)

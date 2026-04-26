@@ -8,16 +8,16 @@ import (
 type ResourceType struct {
 	Name      string
 	DependsOn []string
-	Lifecycle ResourceLifecycle
+	Lifecycle ObjectLifecycle
 	Columns   []string
 	Format    func(Object) []string
 }
 
 // TODO: will be changed later to "ObjectLifeCycle"
-type ResourceLifecycle interface {
+type ObjectLifecycle interface {
 	Plan(desired, current *Object) (Action, error)
 	Apply(session Session, change Change) error
-	Destroy(session Session, current Object) error
+	Destroy(session Session, change Change) error
 }
 
 var (

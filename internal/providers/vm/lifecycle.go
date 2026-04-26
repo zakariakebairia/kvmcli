@@ -3,7 +3,6 @@ package vm
 import (
 	"fmt"
 
-	logger "github.com/zakariakebairia/kvmcli/internal/logger"
 	"github.com/zakariakebairia/kvmcli/internal/providers/network"
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
@@ -65,7 +64,7 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	// If no MAC is provided, one is derived deterministically from the IP.
 	hostAddr, err := network.ResolveL2L3Pair(
 		spec.GetString("ip"),
-		spec.GetString("mac"),
+		spec.GetString("mac_address"),
 	)
 	if err != nil {
 		return fmt.Errorf("resolve host addresses for %q: %w", spec.Name, err)
@@ -74,16 +73,16 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	// Provision a qcow2 overlay disk backed by the specified image.
 	diskPath, err := provisionDisk(session, spec)
 	if err != nil {
+		rollback = append(rollback, func() { deleteOverlay(diskPath) })
 		return fmt.Errorf("provision disk: %w", err)
 	}
-	rollback = append(rollback, func() { deleteOverlay(diskPath) })
 
 	// Define the libvirt domain (registers the VM, does not start it).
 	domain, err := defineDomain(session, spec, diskPath, hostAddr)
 	if err != nil {
+		rollback = append(rollback, func() { session.Conn.DomainUndefineFlags(domain, 0) })
 		return fmt.Errorf("define domain %q: %w", spec.Name, err)
 	}
-	rollback = append(rollback, func() { session.Conn.DomainUndefineFlags(domain, 0) })
 
 	// Register a static DHCP mapping so the VM always gets the same IP.
 	if err = network.SetStaticMapping(session, spec, hostAddr); err != nil {
@@ -103,25 +102,42 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	return nil
 }
 
-func (l *VMLifecycle) Destroy(session registry.Session, current registry.Object) error {
-	dom, err := session.Conn.DomainLookupByName(current.Name)
+// FIX: Correct destroy behavior for resources defined in HCL.
+//
+// Resources in the HCL file do not contain all required values.
+// Some fields (e.g., MAC address, disk_path) are generated and stored
+// only after the resource is created in the database.
+//
+// For destroy:
+// - Use the HCL file only to identify the resource (e.g., by name).
+// - Load the complete resource data from the database.
+// - Perform the destroy operation using the full, resolved data.
+func (l *VMLifecycle) Destroy(session registry.Session, change registry.Change) error {
+	spec := change.Current
+
+	dom, err := session.Conn.DomainLookupByName(spec.Name)
 	if err != nil {
-		return fmt.Errorf("lookup domain %q: %w", current.Name, err)
+		return fmt.Errorf("lookup domain %q: %w", spec.Name, err)
 	}
 
 	// Ignore error — VM might already be stopped
 	_ = session.Conn.DomainDestroy(dom)
 
 	if err := session.Conn.DomainUndefineFlags(dom, 0); err != nil {
-		return fmt.Errorf("undefine domain %q: %w", current.Name, err)
+		return fmt.Errorf("undefine domain %q: %w", spec.Name, err)
 	}
 
-	// Delete disk overlay
-	if diskPath := current.GetString("disk_path"); diskPath != "" {
-		if err := deleteOverlay(diskPath); err != nil {
-			logger.Warnf("failed to delete disk %s: %v", diskPath, err)
-		}
-	}
+	// // Delete disk overlay
+	// if diskPath := spec.GetString("disk_path"); diskPath != "" {
+	// 	fmt.Println("-->", diskPath)
+	// 	if err := deleteOverlay(diskPath); err != nil {
+	// 		return err
+	// 	}
+	// }
 
+	diskPath := spec.GetString("disk_path")
+	if err := deleteOverlay(diskPath); err != nil {
+		return err
+	}
 	return nil
 }
