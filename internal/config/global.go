@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/pelletier/go-toml/v2"
+	"github.com/zakariakebairia/kvmcli/internal/logger"
 )
 
 // GlobalConfig represents the system-wide configuration loaded from TOML.
@@ -157,6 +158,9 @@ func LoadDefaultConfig() (*GlobalConfig, error) {
 		if err := toml.Unmarshal(content, &cfg); err != nil {
 			return nil, fmt.Errorf("parse config %q: %w", p, err)
 		}
+
+		// Setting verbose value
+		logger.SetVerbose(cfg.Meta.Verbose)
 		return &cfg, nil
 	}
 

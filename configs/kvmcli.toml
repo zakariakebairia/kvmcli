@@ -5,6 +5,7 @@
 
 [meta]
 version = 1
+verbose = true
 
 [paths]
 db = "/home/zakaria/dox/homelab/kvmcli/dev.db"

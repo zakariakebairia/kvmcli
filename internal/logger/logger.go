@@ -22,6 +22,7 @@ func Info(resource, action string, err error) {
 	if verbose {
 		fmt.Printf("%s %s failed: %v\n", resource, action, err)
 	} else {
+		// fmt.Printf("%s %s failed: %v\n", resource, action, err)
 		fmt.Printf("%s %s failed\n", resource, action)
 	}
 }
