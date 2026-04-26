@@ -40,43 +40,15 @@ func ResolveL2L3Pair(ipStr, macStr string) (*HostAddr, error) {
 	if ipv4 == nil {
 		return nil, fmt.Errorf("invalid IPv4 address: %q", ipStr)
 	}
-	host := &HostAddr{IP: ipv4}
+	hostAddr := &HostAddr{IP: ipv4}
 	if macStr == "" {
-		host.MAC = ip2MAC(host.IP)
-		return host, nil
+		hostAddr.MAC = ip2MAC(hostAddr.IP)
+		return hostAddr, nil
 	}
 	mac, err := net.ParseMAC(macStr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid MAC address: %w", err)
 	}
-	host.MAC = mac
-	return host, nil
-}
-
-func IP2MAC(inputIP string) (string, error) {
-	// Check MAC Address prefix validity
-	_, err := net.ParseMAC(MACAddressPrefix + ":00:00:00:00")
-	if err != nil {
-		return "", fmt.Errorf("invalid MAC prefix %q", MACAddressPrefix)
-	}
-
-	// Check if inputIP is a valide IP address
-	ip := net.ParseIP(inputIP)
-	if ip == nil {
-		return "", fmt.Errorf("not an IPv4 address: %q", inputIP)
-	}
-
-	// Extract IPv4 bytes (4 bytes)
-	ipv4 := ip.To4()
-	if ipv4 == nil {
-		return "", fmt.Errorf("%q is not an IPv4 address", inputIP)
-	}
-
-	// %02X ensures two-digit uppercase hex (e.g., '0' becomes '00')
-	// %02x for lowercase hex
-	// We use %02x to keep the MAC address lowercase (standard in Linux/Go)
-	return fmt.Sprintf("%s:%02x:%02x:%02x:%02x",
-		MACAddressPrefix,
-		ipv4[0], ipv4[1], ipv4[2], ipv4[3],
-	), nil
+	hostAddr.MAC = mac
+	return hostAddr, nil
 }
