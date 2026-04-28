@@ -41,17 +41,19 @@ func (e *Engine) Apply(desired []registry.Object) error {
 				Current: nil,
 			}
 
-			resource := obj.TypeName + "/" + obj.Name
+			// resource := obj.TypeName + "/" + obj.Name
 			if err := objectType.Lifecycle.Apply(e.session, change); err != nil {
-				logger.Info(resource, "create", err)
-				return fmt.Errorf("apply %s: %w", resource, err)
+				// logger.Info(resource, "create", err)
+				return fmt.Errorf("creating %s/%s: %w", obj.TypeName, obj.Name, err)
 			}
 
-			obj.Status = "created"
+			// obj.Status = "created"
 			if err := e.dbHandler.Put(e.session.Ctx, &obj); err != nil {
-				return fmt.Errorf("save object %s: %w", resource, err)
+				// return fmt.Errorf("save object %s: %w", resource, err)
+				return fmt.Errorf("save object %s/%s: %w", obj.TypeName, obj.Name, err)
 			}
-			logger.Info(resource, obj.Status, nil)
+			// logger.Info(resource, obj.Status, nil)
+			fmt.Printf("%s/%s created\n", obj.TypeName, obj.Name)
 		}
 	}
 	return nil
