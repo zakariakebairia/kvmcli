@@ -62,8 +62,12 @@ func (s *DBHandler) Get(
 		return nil, fmt.Errorf("get object: %w", err)
 	}
 
-	json.Unmarshal([]byte(labelsRaw), &object.Labels)
-	json.Unmarshal([]byte(attrsRaw), &object.Attrs)
+	if err := json.Unmarshal([]byte(labelsRaw), &object.Labels); err != nil {
+		return nil, fmt.Errorf("unmarshal labels: %w", err)
+	}
+	if err := json.Unmarshal([]byte(attrsRaw), &object.Attrs); err != nil {
+		return nil, fmt.Errorf("unmarshal attribues: %w", err)
+	}
 	return object, nil
 }
 
@@ -99,8 +103,13 @@ func (s *DBHandler) List(ctx context.Context, typeName string) ([]registry.Objec
 		); err != nil {
 			return nil, fmt.Errorf("scan resource: %w", err)
 		}
-		json.Unmarshal([]byte(labelsRaw), &obj.Labels)
-		json.Unmarshal([]byte(attrsRaw), &obj.Attrs)
+
+		if err := json.Unmarshal([]byte(labelsRaw), &obj.Labels); err != nil {
+			return nil, fmt.Errorf("unmarshal labels: %w", err)
+		}
+		if err := json.Unmarshal([]byte(attrsRaw), &obj.Attrs); err != nil {
+			return nil, fmt.Errorf("unmarshal attribues: %w", err)
+		}
 		results = append(results, obj)
 	}
 	return results, rows.Err()
@@ -108,8 +117,14 @@ func (s *DBHandler) List(ctx context.Context, typeName string) ([]registry.Objec
 
 // Put inserts or updates an object.
 func (s *DBHandler) Put(ctx context.Context, object *registry.Object) error {
-	labelsJSON, _ := json.Marshal(object.Labels)
-	attrsJSON, _ := json.Marshal(object.Attrs)
+	labelsJSON, err := json.Marshal(object.Labels)
+	if err != nil {
+		return fmt.Errorf("marshal labels: %w", err)
+	}
+	attrsJSON, err := json.Marshal(object.Attrs)
+	if err != nil {
+		return fmt.Errorf("marshal attributes: %w", err)
+	}
 
 	const query = `
         INSERT INTO resources (type, name, namespace, labels, attrs, status)
@@ -120,7 +135,7 @@ func (s *DBHandler) Put(ctx context.Context, object *registry.Object) error {
             status = excluded.status,
             updated_at = CURRENT_TIMESTAMP
     `
-	_, err := s.db.ExecContext(ctx, query,
+	_, err = s.db.ExecContext(ctx, query,
 		object.TypeName, object.Name, object.Namespace,
 		string(labelsJSON), string(attrsJSON), object.Status,
 	)
