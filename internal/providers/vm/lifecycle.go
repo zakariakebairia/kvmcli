@@ -59,6 +59,15 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	}()
 
 	spec := change.Desired
+	// check attributes validity
+	var attrs VMAttrs
+
+	if err := attrs.FromObject(spec); err != nil {
+		return fmt.Errorf("parsing vm %q: %w", spec.Name, err)
+	}
+	if err := attrs.Validate(); err != nil {
+		return err
+	}
 
 	// Resolve the host's L2/L3 identity (IP + MAC).
 	// If no MAC is provided, one is derived deterministically from the IP.
