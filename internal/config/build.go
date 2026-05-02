@@ -11,6 +11,7 @@ func buildObjects(cfg *hclConfig) []registry.Object {
 		attrs := map[string]any{
 			"bridge":      n.Bridge,
 			"mode":        n.Mode,
+			"cidr":        n.CIDR,
 			"net_address": n.NetAddress,
 			"netmask":     n.NetMask,
 			"autostart":   n.Autostart,
