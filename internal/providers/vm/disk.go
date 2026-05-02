@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 
 	"github.com/zakariakebairia/kvmcli/internal/registry"
@@ -52,23 +51,27 @@ func deleteOverlay(dest string) error {
 	return nil
 }
 
-func provisionDisk(session registry.Session, spec *registry.Object) (string, error) {
-	image, err := getImage(
-		session,
-		spec.GetString("store"),
-		spec.GetString("image"),
-		spec.Namespace,
-	)
-	if err != nil {
-		return "", fmt.Errorf("lookup image: %w", err)
+func provisionDisk(
+	session registry.Session,
+	src, diskPath string,
+	spec *registry.Object,
+) error {
+	// image, err := getImage(
+	// 	session,
+	// 	spec.GetString("store"),
+	// 	spec.GetString("image"),
+	// 	spec.Namespace,
+	// )
+	// if err != nil {
+	// 	return "", fmt.Errorf("lookup image: %w", err)
+	// }
+
+	// src = filepath.Join(image.ArtifactsPath, image.ImageFile)
+	// diskPath := filepath.Join(image.ImagesPath, spec.Name+".qcow2")
+
+	if err := createOverlay(session.Ctx, src, diskPath); err != nil {
+		return fmt.Errorf("create disk overlay: %w", err)
 	}
 
-	src := filepath.Join(image.ArtifactsPath, image.ImageFile)
-	diskPath := filepath.Join(image.ImagesPath, spec.Name+".qcow2")
-
-	if err = createOverlay(session.Ctx, src, diskPath); err != nil {
-		return "", fmt.Errorf("create disk overlay: %w", err)
-	}
-
-	return diskPath, nil
+	return nil
 }
