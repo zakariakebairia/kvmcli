@@ -63,18 +63,19 @@ func buildDomainXML(
 func defineDomain(
 	session registry.Session,
 	spec *registry.Object,
-	diskPath string,
+	image *Image,
 	hostAddr *network.HostAddr,
 ) (domain libvirt.Domain, err error) {
 	// Get network name
 	networkName := spec.GetString("network")
+
 	// Build xml
 	xml, err := buildDomainXML(
 		spec,
-		diskPath,
+		image.DiskPath,
 		networkName,
 		hostAddr.MAC.String(),
-		"https://rockylinux.org/rocky/9",
+		image.OsProfile,
 	)
 	if err != nil {
 		return domain, fmt.Errorf("build XML: %w", err)

@@ -78,16 +78,25 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	if err != nil {
 		return fmt.Errorf("resolve host addresses for %q: %w", spec.Name, err)
 	}
+	// Get image to provision
+	image, err := getImage(
+		session,
+		spec.GetString("store"),
+		spec.GetString("image"),
+		spec.Namespace,
+	)
+	if err != nil {
+		return fmt.Errorf("get image: %w", err)
+	}
 
 	// Provision a qcow2 overlay disk backed by the specified image.
-	diskPath, err := provisionDisk(session, spec)
-	if err != nil {
-		rollback = append(rollback, func() { deleteOverlay(diskPath) })
+	if err := provisionDisk(session, image.SrcPath, image.DiskPath, spec); err != nil {
+		rollback = append(rollback, func() { deleteOverlay(image.DiskPath) })
 		return fmt.Errorf("provision disk: %w", err)
 	}
 
 	// Define the libvirt domain (registers the VM, does not start it).
-	domain, err := defineDomain(session, spec, diskPath, hostAddr)
+	domain, err := defineDomain(session, spec, image, hostAddr)
 	if err != nil {
 		rollback = append(rollback, func() { session.Conn.DomainUndefineFlags(domain, 0) })
 		return fmt.Errorf("define domain %q: %w", spec.Name, err)
@@ -103,10 +112,9 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	if err = createDomain(session, domain); err != nil {
 		return fmt.Errorf("start domain %q: %w", spec.Name, err)
 	}
-
 	// Persist computed values back into the spec so the engine can save them.
 	spec.Attrs["mac_address"] = hostAddr.MAC.String()
-	spec.Attrs["disk_path"] = diskPath
+	spec.Attrs["disk_path"] = image.DiskPath
 	spec.Status = "running"
 	return nil
 }
