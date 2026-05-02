@@ -1,6 +1,8 @@
 package store
 
 import (
+	"fmt"
+
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
@@ -43,6 +45,17 @@ func (l *StoreLifecycle) Plan(desired, current *registry.Object) (registry.Actio
 }
 
 func (l *StoreLifecycle) Apply(session registry.Session, change registry.Change) error {
+	spec := change.Desired
+	// check attributes validity
+	var attrs StoreAttrs
+
+	if err := attrs.FromObject(spec); err != nil {
+		return fmt.Errorf("parsing vm %q: %w", spec.Name, err)
+	}
+	if err := attrs.Validate(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
