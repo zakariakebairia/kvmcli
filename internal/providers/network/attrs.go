@@ -23,8 +23,6 @@ type NetworkAttrs struct {
 	Bridge    string `json:"bridge"`
 	CIDR      string `json:"cidr"`
 	Mode      string `json:"mode"` // e.g. bridge, nat, host-only
-	// NetworkMask    string `json:"netmask"`
-	// NetworkAddress string `json:"netaddress"`
 }
 
 func (n *NetworkAttrs) FromObject(object *registry.Object) error {
