@@ -40,6 +40,14 @@ func (l *NetworkLifecycle) Plan(desired, current *registry.Object) (registry.Act
 
 func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Change) error {
 	spec := change.Desired
+	var attrs NetworkAttrs
+
+	if err := attrs.FromObject(spec); err != nil {
+		return fmt.Errorf("parsing net %q: %w", spec.Name, err)
+	}
+	if err := attrs.Validate(); err != nil {
+		return err
+	}
 
 	xmlConfig, err := buildNetworkXML(spec)
 	if err != nil {
