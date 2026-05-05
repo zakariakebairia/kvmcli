@@ -5,7 +5,11 @@ import (
 
 	"github.com/spf13/cobra"
 	log "github.com/zakariakebairia/kvmcli/internal/logger"
+	"github.com/zakariakebairia/kvmcli/internal/operations"
 )
+
+// FIX: Add namespace check
+// it is better to add it to the function of listing itself
 
 // Create the "get" parent command.
 var GetCmd = &cobra.Command{
@@ -13,19 +17,11 @@ var GetCmd = &cobra.Command{
 	Short: "Retrieve information about VMs, snapshots, networks, etc.",
 }
 
-// 'get vm' subcommand: shows virtual machines.
 var GetVMCmd = &cobra.Command{
 	Use:   "vm",
 	Short: "Display information about virtual machines",
 	Run: func(cmd *cobra.Command, args []string) {
-		if Namespace != "" {
-			// operations.ListByNamespace(Namespace)
-			fmt.Println("List by namespace here for vms")
-			// operations.ListAll()
-			return
-		}
-		// operations.ListAll()
-		fmt.Println("I'm working on it")
+		operations.ListAll(cmd.Context(), "vm")
 	},
 }
 
@@ -39,7 +35,6 @@ var GetSnapshotsCmd = &cobra.Command{
 			log.Errorf("Configuration file is required (-f flag)")
 		}
 		fmt.Println("You snapshosts are here")
-		// op.ListSnapshost()
 	},
 }
 
@@ -49,13 +44,7 @@ var GetNetworkCmd = &cobra.Command{
 	Aliases: []string{"net"},
 	Short:   "Display network details",
 	Run: func(cmd *cobra.Command, args []string) {
-		if Namespace != "" {
-			// network.ListByNamespace(Namespace)
-			fmt.Println("List by namespace here for networks")
-			return
-		}
-		// operations.ListAllNetworks()
-		fmt.Println("I'm working on it")
+		operations.ListAll(cmd.Context(), "network")
 	},
 }
 
@@ -65,13 +54,7 @@ var GetStoreCmd = &cobra.Command{
 	Aliases: []string{"st"},
 	Short:   "Display stores details",
 	Run: func(cmd *cobra.Command, args []string) {
-		if Namespace != "" {
-			// TODO: implement ListStoresByNamespace
-			fmt.Println("List by namespace here for stores")
-			return
-		}
-		// operations.ListAllStores()
-		fmt.Println("I'm working on it")
+		operations.ListAll(cmd.Context(), "store")
 	},
 }
 
