@@ -15,7 +15,7 @@ func init() {
 		Name:      storeObjName,
 		DependsOn: []string{}, // stores have no dependencies
 		Lifecycle: &StoreLifecycle{},
-		Columns:   []string{"NAME", "NAMESPACE", "BACKEND", "ARTIFACTS", "IMAGES", "STATUS"},
+		Columns:   []string{"NAME", "NAMESPACE", "BACKEND", "ARTIFACTS", "IMAGES" /* , "STATUS" */},
 		Format: func(s registry.Object) []string {
 			return []string{
 				s.Name,
@@ -23,7 +23,7 @@ func init() {
 				s.GetString("backend"),
 				s.GetString("artifacts_path"),
 				s.GetString("images_path"),
-				s.Status,
+				// s.Status,
 			}
 		},
 	})
