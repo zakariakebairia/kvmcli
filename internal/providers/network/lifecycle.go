@@ -11,14 +11,14 @@ func init() {
 		Name:      "network",
 		DependsOn: []string{},
 		Lifecycle: &NetworkLifecycle{},
-		Columns:   []string{"NAME", "NAMESPACE", "BRIDGE", "MODE", "ADDRESS", "STATUS"},
+		Columns:   []string{"NAME", "NAMESPACE", "BRIDGE", "MODE", "NETWORK ADDRESS", "STATUS"},
 		Format: func(n registry.Object) []string {
 			return []string{
 				n.Name,
 				n.Namespace,
 				n.GetString("bridge"),
 				n.GetString("mode"),
-				n.GetString("net_address"),
+				n.GetString("cidr"),
 				n.Status,
 			}
 		},
