@@ -33,7 +33,7 @@ func NewSession(ctx context.Context) (registry.Session, func(), error) {
 	}
 
 	// Open the SQLite database
-	database, err := db.InitDB(ctx, cfg.Paths.DB)
+	database, err := db.OpenDB(ctx, cfg.Paths.DB)
 	if err != nil {
 		_ = conn.Disconnect()
 		return registry.Session{}, nil, fmt.Errorf("init database: %w", err)

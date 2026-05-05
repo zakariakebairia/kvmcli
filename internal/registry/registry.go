@@ -13,7 +13,6 @@ type ResourceType struct {
 	Format    func(Object) []string
 }
 
-// TODO: will be changed later to "ObjectLifeCycle"
 type ObjectLifecycle interface {
 	Plan(desired, current *Object) (Action, error)
 	Apply(session Session, change Change) error
