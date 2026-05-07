@@ -6,27 +6,34 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
+const TypeName = "network"
+
+var networkColumns = []string{"NAME", "NAMESPACE", "CPU", "RAM", "IP", "IMAGE", "STATUS"}
+
 func init() {
 	registry.Register(&registry.ResourceType{
-		Name:      "network",
+		Name:      TypeName,
 		DependsOn: []string{},
 		Lifecycle: &NetworkLifecycle{},
-		Columns:   []string{"NAME", "NAMESPACE", "BRIDGE", "MODE", "NETWORK ADDRESS", "STATUS"},
-		Format: func(n registry.Object) []string {
-			return []string{
-				n.Name,
-				n.Namespace,
-				n.GetString("bridge"),
-				n.GetString("mode"),
-				n.GetString("cidr"),
-				n.Status,
-			}
-		},
+		Columns:   networkColumns,
+		Format:    formatNetwork,
 	})
 }
 
-// NetworkLifecycle implements registry.ResourceLifecycle.
+// NetworkLifecycle implements registry.ObjectLifecycle.
 type NetworkLifecycle struct{}
+
+// formatVM
+func formatNetwork(obj registry.Object) []string {
+	return []string{
+		obj.Name,
+		obj.Namespace,
+		obj.GetString("bridge"),
+		obj.GetString("mode"),
+		obj.GetString("cidr"),
+		obj.Status,
+	}
+}
 
 func (l *NetworkLifecycle) Plan(desired, current *registry.Object) (registry.Action, error) {
 	if current == nil && desired != nil {

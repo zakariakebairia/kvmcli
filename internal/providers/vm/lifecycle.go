@@ -4,33 +4,41 @@ import (
 	"fmt"
 
 	"github.com/zakariakebairia/kvmcli/internal/providers/network"
+	"github.com/zakariakebairia/kvmcli/internal/providers/store"
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
-// type MACAddress = net.HardwareAddr
+const TypeName = "vm"
+
+var vmColumns = []string{"NAME", "NAMESPACE", "CPU", "RAM", "IP", "IMAGE", "STATUS"}
 
 func init() {
 	registry.Register(&registry.ResourceType{
-		Name:      "vm",
-		DependsOn: []string{"network", "store"},
+		Name:      TypeName,
+		DependsOn: []string{network.TypeName, store.TypeName},
 		Lifecycle: &VMLifecycle{},
-		Columns:   []string{"NAME", "NAMESPACE", "CPU", "RAM", "IP", "IMAGE", "STATUS"},
-		Format: func(object registry.Object) []string {
-			return []string{
-				object.Name,
-				object.Namespace,
-				fmt.Sprintf("%v", object.Attrs["cpu"]),
-				fmt.Sprintf("%v", object.Attrs["memory"]),
-				object.GetString("ip"),
-				object.GetString("image"),
-				object.Status,
-			}
-		},
+		Columns:   vmColumns,
+		Format:    formatVM,
 	})
 }
 
 // VMLifecycle implements registry.ResourceLifecycle.
 type VMLifecycle struct{}
+
+// formatVM
+func formatVM(obj registry.Object) []string {
+	// Get the display for  the image
+	// Get  status in realtime
+	return []string{
+		obj.Name,
+		obj.Namespace,
+		fmt.Sprintf("%v", obj.Attrs["cpu"]),
+		fmt.Sprintf("%v", obj.Attrs["memory"]),
+		obj.GetString("ip"),
+		obj.GetString("image"),
+		obj.Status,
+	}
+}
 
 func (l *VMLifecycle) Plan(desired, current *registry.Object) (registry.Action, error) {
 	if current == nil && desired != nil {
@@ -91,16 +99,16 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 
 	// Provision a qcow2 overlay disk backed by the specified image.
 	if err := provisionDisk(session, image.SrcPath, image.DiskPath, spec); err != nil {
-		rollback = append(rollback, func() { deleteOverlay(image.DiskPath) })
 		return fmt.Errorf("provision disk: %w", err)
 	}
+	rollback = append(rollback, func() { deleteOverlay(image.DiskPath) })
 
 	// Define the libvirt domain (registers the VM, does not start it).
 	domain, err := defineDomain(session, spec, image, hostAddr)
 	if err != nil {
-		rollback = append(rollback, func() { session.Conn.DomainUndefineFlags(domain, 0) })
 		return fmt.Errorf("define domain %q: %w", spec.Name, err)
 	}
+	rollback = append(rollback, func() { session.Conn.DomainUndefineFlags(domain, 0) })
 
 	// Register a static DHCP mapping so the VM always gets the same IP.
 	if err = network.SetStaticMapping(session, spec, hostAddr); err != nil {

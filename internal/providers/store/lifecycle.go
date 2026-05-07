@@ -6,32 +6,35 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
-const (
-	storeObjName = "store"
-)
+const TypeName = "store"
+
+// IDEA: Adding `STATUS` later
+var storeColumns = []string{"NAME", "NAMESPACE", "BACKEND", "ARTIFACTS", "IMAGES"}
 
 func init() {
 	registry.Register(&registry.ResourceType{
-		Name:      storeObjName,
+		Name:      TypeName,
 		DependsOn: []string{}, // stores have no dependencies
 		Lifecycle: &StoreLifecycle{},
-		Columns:   []string{"NAME", "NAMESPACE", "BACKEND", "ARTIFACTS", "IMAGES" /* , "STATUS" */},
-		Format: func(s registry.Object) []string {
-			return []string{
-				s.Name,
-				s.Namespace,
-				s.GetString("backend"),
-				s.GetString("artifacts_path"),
-				s.GetString("images_path"),
-				// s.Status,
-			}
-		},
+		Columns:   storeColumns,
+		Format:    formatStore,
 	})
 }
 
 // I might change this into a Pool and Volumes
 // StoreLifecycle implements registry.ResourceLifecycle.
 type StoreLifecycle struct{}
+
+func formatStore(obj registry.Object) []string {
+	return []string{
+		obj.Name,
+		obj.Namespace,
+		obj.GetString("backend"),
+		obj.GetString("artifacts_path"),
+		obj.GetString("images_path"),
+		// s.Status,
+	}
+}
 
 func (l *StoreLifecycle) Plan(desired, current *registry.Object) (registry.Action, error) {
 	if current == nil && desired != nil {
@@ -50,7 +53,7 @@ func (l *StoreLifecycle) Apply(session registry.Session, change registry.Change)
 	var attrs StoreAttrs
 
 	if err := attrs.FromObject(spec); err != nil {
-		return fmt.Errorf("parsing vm %q: %w", spec.Name, err)
+		return fmt.Errorf("parsing store %q: %w", spec.Name, err)
 	}
 	if err := attrs.Validate(); err != nil {
 		return err
