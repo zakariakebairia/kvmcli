@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/zakariakebairia/kvmcli/internal"
+	"github.com/zakariakebairia/kvmcli/internal/operations"
 	"github.com/zakariakebairia/kvmcli/internal/providers/vm"
 )
 
@@ -18,17 +18,22 @@ var stopVmCmd = &cobra.Command{
 	Use:   "vm <vm-name>",
 	Short: "Stop a virtual machine",
 	Args:  cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		vmName := args[0]
-		conn, err := internal.ConnectLibvirt()
+		// fmt.Println("%s, %s", args[0], args[1])
+
+		session, cleanup, err := operations.NewSession(cmd.Context())
 		if err != nil {
-			fmt.Println("init libvirt: %w", err)
+			return fmt.Errorf("failed to create session: %w", err)
 		}
-		if err := vm.Stop(conn, vmName); err != nil {
-			fmt.Println(err)
-			return
+		defer cleanup()
+
+		if err := vm.Stop(session, vmName); err != nil {
+			return fmt.Errorf("failed to stop vm %q: %w", vmName, err)
 		}
-		fmt.Printf("vm/%s stopped\n", vmName)
+
+		cmd.Printf("vm/%s stopped\n", vmName)
+		return nil
 	},
 }
 

@@ -5,31 +5,52 @@ import (
 	"fmt"
 
 	"github.com/digitalocean/go-libvirt"
+	"github.com/zakariakebairia/kvmcli/internal/database"
 	"github.com/zakariakebairia/kvmcli/internal/providers/network"
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 	"github.com/zakariakebairia/kvmcli/internal/templates"
 )
 
 // Start powers on a VM domain by name.
-func Start(conn *libvirt.Libvirt, name string) error {
-	dom, err := conn.DomainLookupByName(name)
+func Start(session registry.Session, name string) error {
+	domain, err := session.Conn.DomainLookupByName(name)
 	if err != nil {
 		return fmt.Errorf("lookup domain %q: %w", name, err)
 	}
-	if err := conn.DomainCreate(dom); err != nil {
+	if err := session.Conn.DomainCreate(domain); err != nil {
+		// return err
 		return fmt.Errorf("start domain %q: %w", name, err)
+	}
+	dbHandler := database.NewDBHandler(session.DB)
+	object, err := dbHandler.Get(session.Ctx, TypeName, name, "infra")
+
+	object.Status = "running"
+	if err := dbHandler.Put(session.Ctx, object); err != nil {
+		return err
 	}
 	return nil
 }
 
-// Stop gracefully shuts down a VM domain by name.
-func Stop(conn *libvirt.Libvirt, name string) error {
-	dom, err := conn.DomainLookupByName(name)
+func Stop(session registry.Session, name string) error {
+	dbHandler := database.NewDBHandler(session.DB)
+	object, err := dbHandler.Get(session.Ctx, TypeName, name, "infra")
+	if err != nil {
+		return fmt.Errorf("get operation: %w", err)
+	}
+	// if object.Status == "stopped" {
+	// 	return fmt.Errorf("vm %q is already stopped", name)
+	// }
+	domain, err := session.Conn.DomainLookupByName(name)
 	if err != nil {
 		return fmt.Errorf("lookup domain %q: %w", name, err)
 	}
-	if err := conn.DomainShutdown(dom); err != nil {
+	if err := session.Conn.DomainShutdown(domain); err != nil {
 		return fmt.Errorf("shutdown domain %q: %w", name, err)
+	}
+
+	object.Status = StatusStopped
+	if err := dbHandler.Put(session.Ctx, object); err != nil {
+		return err
 	}
 	return nil
 }

@@ -8,7 +8,11 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
-const TypeName = "vm"
+const (
+	TypeName      = "vm"
+	StatusRunning = "running"
+	StatusStopped = "stopped"
+)
 
 var Columns = []string{
 	"NAME",
