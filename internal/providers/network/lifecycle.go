@@ -43,13 +43,19 @@ func formatNetwork(obj registry.Object) []string {
 }
 
 func (l *NetworkLifecycle) Plan(desired, current *registry.Object) (registry.Action, error) {
-	if current == nil && desired != nil {
+	switch {
+	case current == nil && desired != nil:
 		return registry.ActionCreate, nil
-	}
-	if current != nil && desired == nil {
+
+	case current != nil && desired == nil:
 		return registry.ActionDelete, nil
+
+	case current != nil && desired != nil:
+		return registry.ActionUpdate, nil
+
+	default:
+		return registry.ActionNone, nil
 	}
-	return registry.ActionNone, nil
 }
 
 func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Change) error {

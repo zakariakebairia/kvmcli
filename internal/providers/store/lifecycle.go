@@ -32,19 +32,23 @@ func formatStore(obj registry.Object) []string {
 		obj.GetString("backend"),
 		obj.GetString("artifacts_path"),
 		obj.GetString("images_path"),
-		// s.Status,
 	}
 }
 
 func (l *StoreLifecycle) Plan(desired, current *registry.Object) (registry.Action, error) {
-	if current == nil && desired != nil {
+	switch {
+	case current == nil && desired != nil:
 		return registry.ActionCreate, nil
-	}
-	if current != nil && desired == nil {
+
+	case current != nil && desired == nil:
 		return registry.ActionDelete, nil
+
+	case current != nil && desired != nil:
+		return registry.ActionUpdate, nil
+
+	default:
+		return registry.ActionNone, nil
 	}
-	// Could add update detection here later
-	return registry.ActionNone, nil
 }
 
 func (l *StoreLifecycle) Apply(session registry.Session, change registry.Change) error {

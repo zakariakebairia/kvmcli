@@ -41,20 +41,23 @@ func formatVM(obj registry.Object) []string {
 }
 
 func (l *VMLifecycle) Plan(desired, current *registry.Object) (registry.Action, error) {
-	if current == nil && desired != nil {
+	switch {
+	case current == nil && desired != nil:
 		return registry.ActionCreate, nil
-	}
-	if current != nil && desired == nil {
-		return registry.ActionDelete, nil
-	}
 
-	if current != nil && desired != nil {
+	case current != nil && desired == nil:
+		return registry.ActionDelete, nil
+
+	case current != nil && desired != nil:
 		return registry.ActionUpdate, nil
+
+	default:
+		return registry.ActionNone, nil
 	}
-	return registry.ActionNone, nil
 }
 
 func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (err error) {
+	desired := change.Desired
 	// rollback is a LIFO stack of cleanup functions.
 	// It runs automatically on any error via the deferred func below.
 	var rollback []func()
