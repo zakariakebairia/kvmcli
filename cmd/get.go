@@ -6,6 +6,9 @@ import (
 	"github.com/spf13/cobra"
 	log "github.com/zakariakebairia/kvmcli/internal/logger"
 	"github.com/zakariakebairia/kvmcli/internal/operations"
+	"github.com/zakariakebairia/kvmcli/internal/providers/network"
+	"github.com/zakariakebairia/kvmcli/internal/providers/store"
+	"github.com/zakariakebairia/kvmcli/internal/providers/vm"
 )
 
 // FIX: Add namespace check
@@ -21,7 +24,7 @@ var GetVMCmd = &cobra.Command{
 	Use:   "vm",
 	Short: "Display information about virtual machines",
 	Run: func(cmd *cobra.Command, args []string) {
-		operations.ListAll(cmd.Context(), "vm")
+		operations.ListAll(cmd.Context(), vm.TypeName)
 	},
 }
 
@@ -44,7 +47,7 @@ var GetNetworkCmd = &cobra.Command{
 	Aliases: []string{"net"},
 	Short:   "Display network details",
 	Run: func(cmd *cobra.Command, args []string) {
-		operations.ListAll(cmd.Context(), "network")
+		operations.ListAll(cmd.Context(), network.TypeName)
 	},
 }
 
@@ -54,7 +57,7 @@ var GetStoreCmd = &cobra.Command{
 	Aliases: []string{"st"},
 	Short:   "Display stores details",
 	Run: func(cmd *cobra.Command, args []string) {
-		operations.ListAll(cmd.Context(), "store")
+		operations.ListAll(cmd.Context(), store.TypeName)
 	},
 }
 
