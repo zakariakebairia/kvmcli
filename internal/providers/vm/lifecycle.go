@@ -10,14 +10,22 @@ import (
 
 const TypeName = "vm"
 
-var vmColumns = []string{"NAME", "NAMESPACE", "CPU", "RAM", "IP", "IMAGE", "STATUS"}
+var Columns = []string{
+	"NAME",
+	"NAMESPACE",
+	"CPU",
+	"RAM",
+	"IP",
+	"IMAGE",
+	"STATUS",
+}
 
 func init() {
 	registry.Register(&registry.ResourceType{
 		Name:      TypeName,
 		DependsOn: []string{network.TypeName, store.TypeName},
 		Lifecycle: &VMLifecycle{},
-		Columns:   vmColumns,
+		Columns:   Columns,
 		Format:    formatVM,
 	})
 }

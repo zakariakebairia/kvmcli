@@ -1,6 +1,10 @@
 package config
 
-import "github.com/zakariakebairia/kvmcli/internal/registry"
+import (
+	"github.com/zakariakebairia/kvmcli/internal/providers/network"
+	"github.com/zakariakebairia/kvmcli/internal/providers/store"
+	"github.com/zakariakebairia/kvmcli/internal/registry"
+)
 
 // buildObjects converts all HCL resource configs into registry Objects.
 // Order: networks and stores first (no deps), then VMs (depend on both).
@@ -9,12 +13,10 @@ func buildObjects(cfg *hclConfig) []registry.Object {
 
 	for _, n := range cfg.Networks {
 		attrs := map[string]any{
-			"bridge":      n.Bridge,
-			"mode":        n.Mode,
-			"cidr":        n.CIDR,
-			"net_address": n.NetAddress,
-			"netmask":     n.NetMask,
-			"autostart":   n.Autostart,
+			"bridge":    n.Bridge,
+			"mode":      n.Mode,
+			"cidr":      n.CIDR,
+			"autostart": n.Autostart,
 		}
 		if n.DHCP != nil {
 			attrs["dhcp"] = map[string]any{
@@ -23,7 +25,7 @@ func buildObjects(cfg *hclConfig) []registry.Object {
 			}
 		}
 		objects = append(objects, registry.Object{
-			TypeName:  "network",
+			TypeName:  network.TypeName,
 			Name:      n.Name,
 			Namespace: n.Namespace,
 			Labels:    n.Labels,
@@ -45,7 +47,7 @@ func buildObjects(cfg *hclConfig) []registry.Object {
 			})
 		}
 		objects = append(objects, registry.Object{
-			TypeName:  "store",
+			TypeName:  store.TypeName,
 			Name:      s.Name,
 			Namespace: s.Namespace,
 			Labels:    s.Labels,
