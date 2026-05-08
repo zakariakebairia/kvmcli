@@ -59,8 +59,18 @@ func (l *NetworkLifecycle) Plan(desired, current *registry.Object) (registry.Act
 	}
 }
 
-func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Change) error {
+func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Change) (err error) {
 	spec := change.Desired
+
+	var rollback []func()
+	defer func() {
+		if err != nil {
+			for i := len(rollback) - 1; i >= 0; i-- {
+				rollback[i]()
+			}
+		}
+	}()
+
 	var attrs NetworkAttrs
 
 	if err := attrs.FromObject(spec); err != nil {
@@ -81,10 +91,13 @@ func (l *NetworkLifecycle) Apply(session registry.Session, change registry.Chang
 		return fmt.Errorf("define network %q: %w", spec.Name, err)
 	}
 
+	rollback = append(rollback, func() { session.Conn.NetworkUndefine(netInstance) })
+
 	// Start the network
 	if err := session.Conn.NetworkCreate(netInstance); err != nil {
 		return fmt.Errorf("start network %q: %w", spec.Name, err)
 	}
+	rollback = append(rollback, func() { session.Conn.NetworkDestroy(netInstance) })
 
 	if spec.GetBool("autostart") {
 		{
