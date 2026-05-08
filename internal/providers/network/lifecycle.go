@@ -8,14 +8,21 @@ import (
 
 const TypeName = "network"
 
-var networkColumns = []string{"NAME", "NAMESPACE", "CPU", "RAM", "IP", "IMAGE", "STATUS"}
+var Columns = []string{
+	"NAME",
+	"NAMESPACE",
+	"BRIDGE",
+	"MODE",
+	"ADDRESS",
+	"STATUS",
+}
 
 func init() {
 	registry.Register(&registry.ResourceType{
 		Name:      TypeName,
 		DependsOn: []string{},
 		Lifecycle: &NetworkLifecycle{},
-		Columns:   networkColumns,
+		Columns:   Columns,
 		Format:    formatNetwork,
 	})
 }
