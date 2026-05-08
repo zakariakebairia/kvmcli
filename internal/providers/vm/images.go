@@ -8,16 +8,9 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
-//	type Image struct {
-//		ArtifactsPath   string
-//		ImagesPath      string
-//		ImageFile       string
-//		OsProfile       string
-//		SourceImageFile string
-//		DiskPath        string
-//	}
 type Image struct {
 	File      string
+	Display   string
 	OsProfile string
 	SrcPath   string // absolute path to the base image artifact
 	DiskPath  string // directory where overlay disks should be placed
@@ -59,11 +52,16 @@ func getImage(session registry.Session, storeName, imageName, nameSpace string) 
 		if !ok {
 			return nil, fmt.Errorf("image %q: missing or invalid os_profile field", imageName)
 		}
+		imageDisplay, ok := image["display"].(string)
+		if !ok {
+			return nil, fmt.Errorf("image %q: missing or invalid display", storeName)
+		}
 		return &Image{
 			File:      file,
 			OsProfile: osProfile,
 			SrcPath:   filepath.Join(artifactsPath, file),
 			DiskPath:  filepath.Join(imagesPath, imageName+".qcow2"),
+			Display:   imageDisplay,
 		}, nil
 	}
 	return nil, fmt.Errorf("image %q not found in store %q", imageName, storeName)
