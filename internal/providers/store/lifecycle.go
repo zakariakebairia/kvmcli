@@ -9,22 +9,31 @@ import (
 const TypeName = "store"
 
 // IDEA: Adding `STATUS` later
-var storeColumns = []string{"NAME", "NAMESPACE", "BACKEND", "ARTIFACTS", "IMAGES"}
+var Columns = []string{
+	"NAME",
+	"NAMESPACE",
+	"BACKEND",
+	"ARTIFACTS PATH",
+	"IMAGES PATH",
+}
 
 func init() {
 	registry.Register(&registry.ResourceType{
 		Name:      TypeName,
 		DependsOn: []string{}, // stores have no dependencies
 		Lifecycle: &StoreLifecycle{},
-		Columns:   storeColumns,
+		Columns:   Columns,
 		Format:    formatStore,
 	})
 }
 
-// I might change this into a Pool and Volumes
-// StoreLifecycle implements registry.ResourceLifecycle.
+// TODO: Consider splitting the store abstraction into pools and volumes.
+
+// Lifecycle implements the registry.ObjectLifecycle interface
+// for store resources.
 type StoreLifecycle struct{}
 
+// formatStore renders a store resource for table output.
 func formatStore(obj registry.Object) []string {
 	return []string{
 		obj.Name,

@@ -69,12 +69,11 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 		}
 	}()
 
-	spec := change.Desired
 	// check attributes validity
 	var attrs VMAttrs
 
-	if err := attrs.FromObject(spec); err != nil {
-		return fmt.Errorf("parsing vm %q: %w", spec.Name, err)
+	if err := attrs.FromObject(desired); err != nil {
+		return fmt.Errorf("parsing vm %q: %w", desired.Name, err)
 	}
 	if err := attrs.Validate(); err != nil {
 		return err
@@ -83,50 +82,50 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	// Resolve the host's L2/L3 identity (IP + MAC).
 	// If no MAC is provided, one is derived deterministically from the IP.
 	hostAddr, err := network.ResolveL2L3Pair(
-		spec.GetString("ip"),
-		spec.GetString("mac_address"),
+		desired.GetString("ip"),
+		desired.GetString("mac_address"),
 	)
 	if err != nil {
-		return fmt.Errorf("resolve host addresses for %q: %w", spec.Name, err)
+		return fmt.Errorf("resolve host addresses for %q: %w", desired.Name, err)
 	}
 	// Get image to provision
 	image, err := getImage(
 		session,
-		spec.GetString("store"),
-		spec.GetString("image"),
-		spec.Namespace,
+		desired.GetString("store"),
+		desired.GetString("image"),
+		desired.Namespace,
 	)
 	if err != nil {
 		return fmt.Errorf("get image: %w", err)
 	}
 
 	// Provision a qcow2 overlay disk backed by the specified image.
-	if err := provisionDisk(session, image.SrcPath, image.DiskPath, spec); err != nil {
+	if err := provisionDisk(session, image.SrcPath, image.DiskPath, desired); err != nil {
 		return fmt.Errorf("provision disk: %w", err)
 	}
 	rollback = append(rollback, func() { deleteOverlay(image.DiskPath) })
 
 	// Define the libvirt domain (registers the VM, does not start it).
-	domain, err := defineDomain(session, spec, image, hostAddr)
+	domain, err := defineDomain(session, desired, image, hostAddr)
 	if err != nil {
-		return fmt.Errorf("define domain %q: %w", spec.Name, err)
+		return fmt.Errorf("define domain %q: %w", desired.Name, err)
 	}
 	rollback = append(rollback, func() { session.Conn.DomainUndefineFlags(domain, 0) })
 
 	// Register a static DHCP mapping so the VM always gets the same IP.
-	if err = network.SetStaticMapping(session, spec, hostAddr); err != nil {
-		return fmt.Errorf("set static DHCP mapping for %q: %w", spec.Name, err)
+	if err = network.SetStaticMapping(session, desired, hostAddr); err != nil {
+		return fmt.Errorf("set static DHCP mapping for %q: %w", desired.Name, err)
 	}
 	// rollback = append(rollback, func() { network.RemoveStaticMapping(session, hostAddr) })
 
 	// Start the domain (boots the VM).
 	if err = createDomain(session, domain); err != nil {
-		return fmt.Errorf("start domain %q: %w", spec.Name, err)
+		return fmt.Errorf("start domain %q: %w", desired.Name, err)
 	}
 	// Persist computed values back into the spec so the engine can save them.
-	spec.Attrs["mac_address"] = hostAddr.MAC.String()
-	spec.Attrs["disk_path"] = image.DiskPath
-	spec.Status = "running"
+	desired.Attrs["mac_address"] = hostAddr.MAC.String()
+	desired.Attrs["disk_path"] = image.DiskPath
+	desired.Status = "running"
 	return nil
 }
 
