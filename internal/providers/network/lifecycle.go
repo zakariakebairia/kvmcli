@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
@@ -14,7 +15,7 @@ var Columns = []string{
 	"BRIDGE",
 	"MODE",
 	"ADDRESS",
-	"STATUS",
+	"AUTOSTART",
 }
 
 func init() {
@@ -38,7 +39,7 @@ func formatNetwork(obj registry.Object) []string {
 		obj.GetString("bridge"),
 		obj.GetString("mode"),
 		obj.GetString("cidr"),
-		obj.Status,
+		strconv.FormatBool(obj.GetBool("autostart")),
 	}
 }
 
