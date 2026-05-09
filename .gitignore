@@ -23,6 +23,7 @@ docs
 
 # Others
 *.off
+*.old
 # Specific files
 configs/test.hcl
 verify_datasource.hcl
