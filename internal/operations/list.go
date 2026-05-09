@@ -38,6 +38,17 @@ func ListAll(ctx context.Context, kind string) error {
 
 	fmt.Fprintln(w, strings.Join(descriptor.Columns, "\t"))
 	for _, object := range objects {
+
+		// vm exception
+		if kind == "vm" {
+			status, err := vm.GetVMStatus(session, object.Name)
+			if err != nil {
+				return fmt.Errorf("get vm status: %w", err)
+			}
+
+			object.Status = status
+		}
+		//
 		fmt.Fprintln(w, strings.Join(descriptor.Format(object), "\t"))
 	}
 

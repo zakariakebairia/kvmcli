@@ -24,11 +24,52 @@ func Start(session registry.Session, name string) error {
 	dbHandler := database.NewDBHandler(session.DB)
 	object, err := dbHandler.Get(session.Ctx, TypeName, name, "infra")
 
-	object.Status = "running"
+	status, err := GetVMStatus(session, name)
+	if err != nil {
+		return fmt.Errorf("get vm status: %w", err)
+	}
+
+	object.Status = status
 	if err := dbHandler.Put(session.Ctx, object); err != nil {
 		return err
 	}
 	return nil
+}
+
+func GetVMStatus(session registry.Session, name string) (string, error) {
+	domain, err := session.Conn.DomainLookupByName(name)
+	if err != nil {
+		return "", fmt.Errorf("lookup domain %q: %w", name, err)
+	}
+	state, _, err := session.Conn.DomainGetState(domain, 0)
+	if err != nil {
+		return "", fmt.Errorf("get state: %w", err)
+	}
+	switch libvirt.DomainState(state) {
+	case libvirt.DomainRunning:
+		return "Running", nil
+
+	case libvirt.DomainBlocked:
+		return "Blocked", nil
+
+	case libvirt.DomainPaused:
+		return "Paused", nil
+
+	case libvirt.DomainShutdown:
+		return "Shutdown", nil
+
+	case libvirt.DomainShutoff:
+		return "Shutoff", nil
+
+	case libvirt.DomainCrashed:
+		return "Crashed", nil
+
+	case libvirt.DomainPmsuspended:
+		return "Suspended", nil
+
+	default:
+		return "Unknown", nil
+	}
 }
 
 func Stop(session registry.Session, name string) error {
@@ -37,9 +78,9 @@ func Stop(session registry.Session, name string) error {
 	if err != nil {
 		return fmt.Errorf("get operation: %w", err)
 	}
-	// if object.Status == "stopped" {
-	// 	return fmt.Errorf("vm %q is already stopped", name)
-	// }
+	if object.Status == "stopped" {
+		return fmt.Errorf("vm %q is already stopped", name)
+	}
 	domain, err := session.Conn.DomainLookupByName(name)
 	if err != nil {
 		return fmt.Errorf("lookup domain %q: %w", name, err)
@@ -48,7 +89,13 @@ func Stop(session registry.Session, name string) error {
 		return fmt.Errorf("shutdown domain %q: %w", name, err)
 	}
 
-	object.Status = StatusStopped
+	status, err := GetVMStatus(session, name)
+	if err != nil {
+		return fmt.Errorf("get vm status: %w", err)
+	}
+
+	object.Status = status
+
 	if err := dbHandler.Put(session.Ctx, object); err != nil {
 		return err
 	}
