@@ -112,7 +112,7 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	}
 
 	// Provision a qcow2 overlay disk backed by the specified image.
-	if err := provisionDisk(session, image.SrcPath, image.DiskPath, desired); err != nil {
+	if err := provisionDisk(session, image.SrcPath, image.DiskPath); err != nil {
 		return fmt.Errorf("provision disk: %w", err)
 	}
 	rollback = append(rollback, func() { deleteOverlay(image.DiskPath) })
