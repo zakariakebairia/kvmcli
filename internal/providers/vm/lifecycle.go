@@ -69,7 +69,7 @@ func (l *VMLifecycle) Plan(desired, current *registry.Object) (registry.Action, 
 }
 
 func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (err error) {
-	desired := change.Desired
+	object := change.Desired
 	// rollback is a LIFO stack of cleanup functions.
 	// It runs automatically on any error via the deferred func below.
 	var rollback []func()
@@ -84,8 +84,8 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	// check attributes validity
 	var attrs VMAttrs
 
-	if err := attrs.FromObject(desired); err != nil {
-		return fmt.Errorf("parsing vm %q: %w", desired.Name, err)
+	if err := attrs.FromObject(object); err != nil {
+		return fmt.Errorf("parsing vm %q: %w", object.Name, err)
 	}
 	if err := attrs.Validate(); err != nil {
 		return err
@@ -94,11 +94,11 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	// Resolve the host's L2/L3 identity (IP + MAC).
 	// If no MAC is provided, one is derived deterministically from the IP.
 	hostAddr, err := network.ResolveL2L3Pair(
-		desired.GetString("ip"),
-		desired.GetString("mac_address"),
+		object.GetString("ip"),
+		object.GetString("mac_address"),
 	)
 	if err != nil {
-		return fmt.Errorf("resolve host addresses for %q: %w", desired.Name, err)
+		return fmt.Errorf("resolve host addresses for %q: %w", object.Name, err)
 	}
 	// Get image to provision
 	image, err := getImage(session, object)
@@ -113,26 +113,26 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 	rollback = append(rollback, func() { deleteOverlay(image.DiskPath) })
 
 	// Define the libvirt domain (registers the VM, does not start it).
-	domain, err := defineDomain(session, desired, image, hostAddr)
+	domain, err := defineDomain(session, object, image, hostAddr)
 	if err != nil {
-		return fmt.Errorf("define domain %q: %w", desired.Name, err)
+		return fmt.Errorf("define domain %q: %w", object.Name, err)
 	}
 	rollback = append(rollback, func() { session.Conn.DomainUndefineFlags(domain, 0) })
 
 	// Register a static DHCP mapping so the VM always gets the same IP.
-	if err = network.SetStaticMapping(session, desired, hostAddr); err != nil {
-		return fmt.Errorf("set static DHCP mapping for %q: %w", desired.Name, err)
+	if err = network.SetStaticMapping(session, object, hostAddr); err != nil {
+		return fmt.Errorf("set static DHCP mapping for %q: %w", object.Name, err)
 	}
 	// rollback = append(rollback, func() { network.RemoveStaticMapping(session, hostAddr) })
 
 	// Start the domain (boots the VM).
 	if err = createDomain(session, domain); err != nil {
-		return fmt.Errorf("start domain %q: %w", desired.Name, err)
+		return fmt.Errorf("start domain %q: %w", object.Name, err)
 	}
 	// Persist computed values back into the spec so the engine can save them.
-	desired.Attrs["mac_address"] = hostAddr.MAC.String()
-	desired.Attrs["disk_path"] = image.DiskPath
-	desired.Status = "running"
+	object.Attrs["mac_address"] = hostAddr.MAC.String()
+	object.Attrs["disk_path"] = image.DiskPath
+	object.Status = "running"
 	return nil
 }
 
@@ -147,31 +147,27 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 // - Load the complete resource data from the database.
 // - Perform the destroy operation using the full, resolved data.
 func (l *VMLifecycle) Destroy(session registry.Session, change registry.Change) error {
-	spec := change.Current
+	object := change.Current
 
-	dom, err := session.Conn.DomainLookupByName(spec.Name)
+	dom, err := session.Conn.DomainLookupByName(object.Name)
 	if err != nil {
-		return fmt.Errorf("lookup domain %q: %w", spec.Name, err)
+		return fmt.Errorf("lookup domain %q: %w", object.Name, err)
 	}
 
 	// Ignore error — VM might already be stopped
 	_ = session.Conn.DomainDestroy(dom)
 
 	if err := session.Conn.DomainUndefineFlags(dom, 0); err != nil {
-		return fmt.Errorf("undefine domain %q: %w", spec.Name, err)
+		return fmt.Errorf("undefine domain %q: %w", object.Name, err)
 	}
 
 	// // Delete disk overlay
-	// if diskPath := spec.GetString("disk_path"); diskPath != "" {
-	// 	fmt.Println("-->", diskPath)
-	// 	if err := deleteOverlay(diskPath); err != nil {
-	// 		return err
-	// 	}
-	// }
-
-	diskPath := spec.GetString("disk_path")
-	if err := deleteOverlay(diskPath); err != nil {
-		return err
+	if diskPath := object.GetString("disk_path"); diskPath != "" {
+		if err := deleteOverlay(diskPath); err != nil {
+			return err
+		}
 	}
+
 	return nil
+
 }

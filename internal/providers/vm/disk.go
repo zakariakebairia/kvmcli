@@ -51,13 +51,9 @@ func deleteOverlay(dest string) error {
 	return nil
 }
 
-func provisionDisk(
-	session registry.Session,
-	src, diskPath string,
-) error {
+func provisionDisk(session registry.Session, src, diskPath string) error {
 	if err := createOverlay(session.Ctx, src, diskPath); err != nil {
 		return fmt.Errorf("create disk overlay: %w", err)
 	}
-
 	return nil
 }

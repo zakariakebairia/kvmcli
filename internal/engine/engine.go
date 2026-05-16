@@ -8,12 +8,11 @@ import (
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
+// session carries (ctx, sql connection, libvirt connection)
+
 // Engine orchestrates resource lifecycle.
 // It looks up the correct provider via the registry, calls its lifecycle methods,
 // and persists state via the DBHandler.
-
-// session carries (ctx, sql connection, libvirt connection)
-
 type Engine struct {
 	dbHandler *database.DBHandler
 	session   registry.Session
