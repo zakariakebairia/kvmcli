@@ -17,9 +17,16 @@ type Image struct {
 }
 
 // FIX: What if the store and other object are in different namespaces
-func getImage(session registry.Session, storeName, imageName, nameSpace string) (*Image, error) {
+func getImage(
+	session registry.Session,
+	object *registry.Object,
+) (*Image, error) {
+	// Get the store name
+	storeName := object.GetString("store")
+	// Get the image name
+	imageName := object.GetString("image")
 	dbHandler := database.NewDBHandler(session.DB)
-	store, err := dbHandler.Get(session.Ctx, "store", storeName, nameSpace)
+	store, err := dbHandler.Get(session.Ctx, "store", storeName, object.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("list stores: %w", err)
 	}
@@ -60,7 +67,7 @@ func getImage(session registry.Session, storeName, imageName, nameSpace string) 
 			File:      file,
 			OsProfile: osProfile,
 			SrcPath:   filepath.Join(artifactsPath, file),
-			DiskPath:  filepath.Join(imagesPath, imageName+".qcow2"),
+			DiskPath:  filepath.Join(imagesPath, object.Name+".qcow2"),
 			Display:   imageDisplay,
 		}, nil
 	}

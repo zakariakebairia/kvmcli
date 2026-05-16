@@ -101,12 +101,7 @@ func (vm *VMLifecycle) Apply(session registry.Session, change registry.Change) (
 		return fmt.Errorf("resolve host addresses for %q: %w", desired.Name, err)
 	}
 	// Get image to provision
-	image, err := getImage(
-		session,
-		desired.GetString("store"),
-		desired.GetString("image"),
-		desired.Namespace,
-	)
+	image, err := getImage(session, object)
 	if err != nil {
 		return fmt.Errorf("get image: %w", err)
 	}
