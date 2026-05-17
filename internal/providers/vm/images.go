@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/zakariakebairia/kvmcli/internal/database"
+	"github.com/zakariakebairia/kvmcli/internal/providers/store"
 	"github.com/zakariakebairia/kvmcli/internal/registry"
 )
 
@@ -26,7 +27,7 @@ func getImage(
 	// Get the image name
 	imageName := object.GetString("image")
 	dbHandler := database.NewDBHandler(session.DB)
-	store, err := dbHandler.Get(session.Ctx, "store", storeName, object.Namespace)
+	store, err := dbHandler.Get(session.Ctx, store.TypeName, storeName, object.Namespace)
 	if err != nil {
 		return nil, fmt.Errorf("list stores: %w", err)
 	}
