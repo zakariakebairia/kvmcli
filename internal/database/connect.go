@@ -11,10 +11,6 @@ import (
 // OpenDB opens a database handle and verifies the connection using context.
 // It returns a ready-to-use *sql.DB or an error if the connection fails.
 func OpenDB(ctx context.Context, dbPath string) (*sql.DB, error) {
-	// Define a 5-second timeout context for DB operations
-	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// defer cancel()
-
 	if dbPath == "" {
 		return nil, fmt.Errorf("database path is empty")
 	}
