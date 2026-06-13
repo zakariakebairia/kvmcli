@@ -23,8 +23,8 @@ var GetCmd = &cobra.Command{
 var GetVMCmd = &cobra.Command{
 	Use:   "vm",
 	Short: "Display information about virtual machines",
-	Run: func(cmd *cobra.Command, args []string) {
-		operations.ListAll(cmd.Context(), vm.TypeName)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return operations.ListAll(cmd.Context(), vm.TypeName)
 	},
 }
 
@@ -46,8 +46,8 @@ var GetNetworkCmd = &cobra.Command{
 	Use:     "network",
 	Aliases: []string{"net"},
 	Short:   "Display network details",
-	Run: func(cmd *cobra.Command, args []string) {
-		operations.ListAll(cmd.Context(), network.TypeName)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return operations.ListAll(cmd.Context(), network.TypeName)
 	},
 }
 
@@ -56,8 +56,8 @@ var GetStoreCmd = &cobra.Command{
 	Use:     "store",
 	Aliases: []string{"st"},
 	Short:   "Display stores details",
-	Run: func(cmd *cobra.Command, args []string) {
-		operations.ListAll(cmd.Context(), store.TypeName)
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return operations.ListAll(cmd.Context(), store.TypeName)
 	},
 }
 
