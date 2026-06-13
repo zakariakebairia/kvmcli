@@ -3,6 +3,7 @@ package vm
 import (
 	"encoding/xml"
 	"fmt"
+	"time"
 
 	"github.com/digitalocean/go-libvirt"
 	"github.com/zakariakebairia/kvmcli/internal/database"
@@ -28,12 +29,38 @@ func Start(session registry.Session, name string) error {
 	if err != nil {
 		return fmt.Errorf("get vm status: %w", err)
 	}
-
 	object.Status = status
 	if err := dbHandler.Put(session.Ctx, object); err != nil {
 		return err
 	}
 	return nil
+}
+
+func GetVMAge(object registry.Object) (string, error) {
+	if object.CreatedAt == "" {
+		return "", fmt.Errorf("created_at is empty for vm %s", object.Name)
+	}
+
+	t, err := time.Parse(time.RFC3339, object.CreatedAt)
+	if err != nil {
+		return "", fmt.Errorf("parsing created_at: %w", err)
+	}
+
+	return formatAge(time.Since(t)), nil
+}
+
+func formatAge(d time.Duration) string {
+	days := int(d.Hours()) / 24
+	hours := int(d.Hours()) % 24
+	minutes := int(d.Minutes()) % 60
+
+	if days > 0 {
+		return fmt.Sprintf("%dd %dh %dm", days, hours, minutes)
+	}
+	if hours > 0 {
+		return fmt.Sprintf("%dh %dm", hours, minutes)
+	}
+	return fmt.Sprintf("%dm", minutes)
 }
 
 func GetVMStatus(session registry.Session, name string) (string, error) {

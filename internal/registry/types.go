@@ -33,6 +33,7 @@ type Object struct {
 	Labels    map[string]string
 	Attrs     map[string]any
 	Status    string
+	CreatedAt string
 }
 
 // Change is per resource, each resource have a current state and a desirred state.

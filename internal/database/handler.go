@@ -46,14 +46,14 @@ func (s *DBHandler) Get(
 	typeName, name, namespace string,
 ) (*registry.Object, error) {
 	const query = `
-    SELECT type, name, namespace, labels, attrs, status
+    SELECT type, name, namespace, labels, attrs, status, created_at
     FROM resources
     WHERE type = ? AND name = ? AND namespace = ?
     `
 	var labelsRaw, attrsRaw string
 	object := &registry.Object{}
 	err := s.db.QueryRowContext(ctx, query, typeName, name, namespace).Scan(
-		&object.TypeName, &object.Name, &object.Namespace, &labelsRaw, &attrsRaw, &object.Status,
+		&object.TypeName, &object.Name, &object.Namespace, &labelsRaw, &attrsRaw, &object.Status, &object.CreatedAt,
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil // not found = no current object
@@ -77,10 +77,10 @@ func (s *DBHandler) List(ctx context.Context, typeName string) ([]registry.Objec
 	var args []any
 
 	if typeName != "" {
-		query = `SELECT type, name, namespace, labels, attrs, status FROM resources WHERE type = ?`
+		query = `SELECT type, name, namespace, labels, attrs, status, created_at FROM resources WHERE type = ?`
 		args = append(args, typeName)
 	} else {
-		query = `SELECT type, name, namespace, labels, attrs, status FROM resources`
+		query = `SELECT type, name, namespace, labels, attrs, status, created_at FROM resources`
 	}
 
 	rows, err := s.db.QueryContext(ctx, query, args...)
@@ -100,6 +100,7 @@ func (s *DBHandler) List(ctx context.Context, typeName string) ([]registry.Objec
 			&labelsRaw,
 			&attrsRaw,
 			&obj.Status,
+			&obj.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("scan resource: %w", err)
 		}
@@ -135,7 +136,8 @@ func (s *DBHandler) Put(ctx context.Context, object *registry.Object) error {
             status = excluded.status,
             updated_at = CURRENT_TIMESTAMP
     `
-	_, err = s.db.ExecContext(ctx, query,
+	_, err = s.db.ExecContext(
+		ctx, query,
 		object.TypeName, object.Name, object.Namespace,
 		string(labelsJSON), string(attrsJSON), object.Status,
 	)

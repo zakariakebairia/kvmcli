@@ -45,12 +45,10 @@ func ListAll(ctx context.Context, kind string) error {
 		if kind == "vm" {
 			status, err := vm.GetVMStatus(session, object.Name)
 			if err != nil {
-				return fmt.Errorf("get vm status: %w", err)
+				status = "unknown"
 			}
-
 			object.Status = status
 		}
-		//
 		fmt.Fprintln(w, strings.Join(descriptor.Format(object), "\t"))
 	}
 

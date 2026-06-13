@@ -22,6 +22,7 @@ var Columns = []string{
 	"IP",
 	"IMAGE",
 	"STATUS",
+	"AGE",
 }
 
 func init() {
@@ -39,8 +40,12 @@ type VMLifecycle struct{}
 
 // formatVM
 func formatVM(obj registry.Object) []string {
-	// Get the display for  the image
-	// Get  status in realtime
+	// Fall back to a placeholder when the age can't be computed (e.g. the
+	// record predates created_at tracking) so the column never renders blank.
+	age, err := GetVMAge(obj)
+	if err != nil {
+		age = "-"
+	}
 	return []string{
 		obj.Name,
 		obj.Namespace,
@@ -49,6 +54,7 @@ func formatVM(obj registry.Object) []string {
 		obj.GetString("ip"),
 		obj.GetString("image"),
 		obj.Status,
+		age,
 	}
 }
 
@@ -169,5 +175,4 @@ func (l *VMLifecycle) Destroy(session registry.Session, change registry.Change) 
 	}
 
 	return nil
-
 }
